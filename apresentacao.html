@@ -3,523 +3,853 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Apresentação: Manutenção Industrial Preditiva (SENAI)</title>
+  <title>Apresentação do Projeto — IA para Análise Preditiva (SCTEC / SENAI)</title>
   <style>
     :root {
-      --bg: #0f172a;
+      --bg: #0b1120;
       --card: #1e293b;
-      --surface: #0b1120;
+      --surface: #0f172a;
       --border: #334155;
       --text: #f8fafc;
       --muted: #94a3b8;
       --primary: #38bdf8;
       --primary-dark: #0284c7;
+      --accent: #a855f7;
       --success: #10b981;
       --warning: #f59e0b;
       --danger: #ef4444;
     }
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background-color: var(--bg);
+      background: radial-gradient(circle at top right, #1e293b 0%, #0b1120 65%);
       color: var(--text);
       min-height: 100vh;
       display: flex;
       flex-direction: column;
-      padding: 24px;
     }
-    .container {
-      max-width: 1040px;
-      width: 100%;
-      margin: 0 auto;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
-    .header {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 16px 24px;
+
+    /* Barra de Topo */
+    .topbar {
+      background: rgba(15, 23, 42, 0.9);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 28px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       flex-wrap: wrap;
-      gap: 16px;
+      gap: 14px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
     }
-    .badge-top {
-      font-size: 12px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-badge {
+      background: rgba(56, 189, 248, 0.15);
+      border: 1px solid var(--primary);
       color: var(--primary);
+      font-weight: 800;
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 99px;
+      letter-spacing: 0.05em;
     }
-    .header h1 {
-      font-size: 20px;
-      margin-top: 4px;
+
+    .brand h1 {
+      font-size: 17px;
+      font-weight: 700;
     }
-    .controls {
+
+    .top-actions {
       display: flex;
       align-items: center;
       gap: 10px;
+      flex-wrap: wrap;
     }
-    button.btn {
-      padding: 8px 16px;
+
+    .btn-link {
+      text-decoration: none;
+      color: var(--text);
+      background: var(--card);
+      border: 1px solid var(--border);
+      padding: 7px 13px;
       border-radius: 8px;
-      font-size: 14px;
+      font-size: 12.5px;
+      font-weight: 600;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+
+    .btn-link:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .btn-link.active-prompt {
+      background: rgba(16, 185, 129, 0.15);
+      border-color: var(--success);
+      color: var(--success);
+    }
+
+    /* Abas das 6 Perguntas */
+    .nav-tabs {
+      display: flex;
+      gap: 8px;
+      padding: 14px 28px 0;
+      max-width: 1320px;
+      width: 100%;
+      margin: 0 auto;
+      overflow-x: auto;
+    }
+
+    .tab-btn {
+      background: rgba(30, 41, 59, 0.65);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 10px 15px;
+      border-radius: 10px;
+      font-size: 12.5px;
       font-weight: 600;
       cursor: pointer;
-      border: 1px solid var(--border);
-      background: var(--surface);
-      color: var(--text);
+      white-space: nowrap;
       transition: all 0.2s;
     }
-    button.btn-primary {
+
+    .tab-btn:hover {
+      color: var(--text);
+      border-color: var(--primary);
+    }
+
+    .tab-btn.active {
       background: var(--primary-dark);
       border-color: var(--primary);
       color: #fff;
+      box-shadow: 0 4px 16px rgba(2, 132, 199, 0.35);
     }
-    button.btn:hover { opacity: 0.85; }
-    .slide-counter {
-      font-size: 14px;
-      font-weight: 600;
-      padding: 6px 12px;
-      border-radius: 8px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-    }
-    .progress-track {
+
+    /* Container Principal de Slides */
+    .slide-wrapper {
+      max-width: 1320px;
       width: 100%;
-      height: 6px;
-      background: var(--border);
-      border-radius: 99px;
-      overflow: hidden;
-    }
-    .progress-bar {
-      height: 100%;
-      background: var(--primary);
-      transition: width 0.3s ease;
-    }
-    .deck {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 36px;
-      min-height: 460px;
+      margin: 18px auto 32px;
+      padding: 0 28px;
+      flex: 1;
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+      gap: 18px;
     }
-    .slide { display: none; flex-direction: column; gap: 24px; }
-    .slide.active { display: flex; }
-    .slide-tag {
-      display: inline-block;
-      font-size: 12px;
-      font-weight: 600;
-      padding: 4px 12px;
-      border-radius: 99px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      color: var(--muted);
-      width: fit-content;
+
+    .slide {
+      display: none;
+      flex-direction: column;
+      gap: 20px;
+      animation: fadeIn 0.25s ease;
     }
-    .slide h2 { font-size: 26px; line-height: 1.25; }
-    .slide p.subtitle { color: var(--muted); font-size: 15px; line-height: 1.5; }
-    .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
-    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 18px; }
-    .box {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 18px;
+
+    .slide.active {
+      display: flex;
     }
-    .box h3 { font-size: 15px; margin-bottom: 8px; }
-    .box p, .box li { font-size: 13px; color: var(--muted); line-height: 1.55; }
-    .box ul { padding-left: 18px; display: flex; flex-direction: column; gap: 6px; }
-    table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    th, td {
-      padding: 10px 12px;
-      text-align: left;
-      border-bottom: 1px solid var(--border);
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
     }
-    th { color: var(--muted); font-weight: 600; }
-    code, pre {
-      font-family: Consolas, Monaco, "Courier New", monospace;
-      font-size: 12.5px;
-    }
-    pre {
-      background: #070b14;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 12px;
-      overflow-x: auto;
-      color: #e2e8f0;
-      line-height: 1.45;
-    }
-    .metric-val { font-size: 30px; font-weight: 800; margin: 6px 0; }
-    .text-success { color: var(--success); }
-    .text-warning { color: var(--warning); }
-    .text-danger { color: var(--danger); }
-    .text-primary { color: var(--primary); }
-    .footer-nav {
-      margin-top: 28px;
-      padding-top: 16px;
-      border-top: 1px solid var(--border);
+
+    .question-banner {
+      background: linear-gradient(90deg, rgba(2, 132, 199, 0.22), rgba(30, 41, 59, 0.85));
+      border: 1px solid var(--primary);
+      border-radius: 14px;
+      padding: 18px 24px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 12px;
-      color: var(--muted);
+      flex-wrap: wrap;
+      gap: 12px;
     }
-    .dots { display: flex; gap: 8px; }
-    .dot {
-      width: 10px;
-      height: 10px;
+
+    .question-banner .q-tag {
+      font-size: 11.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--primary);
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+
+    .question-banner h2 {
+      font-size: 22px;
+      font-weight: 800;
+    }
+
+    /* Caixa Teleprompter (Guia de Fala) */
+    .teleprompter {
+      background: rgba(16, 185, 129, 0.09);
+      border-left: 4px solid var(--success);
+      border-top: 1px solid rgba(16, 185, 129, 0.3);
+      border-right: 1px solid rgba(16, 185, 129, 0.3);
+      border-bottom: 1px solid rgba(16, 185, 129, 0.3);
+      border-radius: 12px;
+      padding: 16px 20px;
+    }
+
+    .teleprompter-title {
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--success);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .teleprompter p {
+      font-size: 14.5px;
+      line-height: 1.65;
+      color: #e2e8f0;
+    }
+
+    /* Grids de Conteúdo */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    @media (max-width: 980px) {
+      .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .card h3 {
+      font-size: 16px;
+      color: var(--primary);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+    }
+
+    .card p, .card li {
+      font-size: 13.5px;
+      line-height: 1.55;
+      color: #cbd5e1;
+    }
+
+    .card ul {
+      padding-left: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    pre {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+      overflow-x: auto;
+      font-family: "Cascadia Code", Consolas, Monaco, monospace;
+      font-size: 12.5px;
+      line-height: 1.5;
+      color: #e2e8f0;
+    }
+
+    .kw { color: #38bdf8; font-weight: 600; }
+    .fn { color: #facc15; }
+    .str { color: #4ade80; }
+    .cmt { color: #64748b; font-style: italic; }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    .kpi {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+      text-align: center;
+    }
+
+    .kpi .val {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--primary);
+    }
+
+    .kpi .lbl {
+      font-size: 11.5px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th, td {
+      padding: 9px 12px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+    }
+
+    th { color: var(--muted); font-weight: 600; }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
       border-radius: 99px;
-      background: var(--border);
-      border: none;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .b-crit { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
+    .b-warn { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+    .b-norm { background: rgba(16, 185, 129, 0.2); color: var(--success); }
+    .b-branch { background: rgba(168, 85, 247, 0.2); color: #c084fc; font-family: monospace; }
+
+    /* Rodapé de Navegação */
+    .footer-nav {
+      max-width: 1320px;
+      width: 100%;
+      margin: 0 auto 24px;
+      padding: 0 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .nav-btn {
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 700;
       cursor: pointer;
     }
-    .dot.active { background: var(--primary); width: 22px; transition: all 0.2s; }
-    input[type="range"] { width: 100%; accent-color: var(--primary); margin-top: 6px; }
-    .status-pill {
-      padding: 4px 12px;
-      border-radius: 99px;
-      font-size: 12px;
-      font-weight: 700;
+
+    .nav-btn:hover {
+      border-color: var(--primary);
+      color: var(--primary);
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <div>
-        <div class="badge-top">Projeto MLOps • Edital SENAI</div>
-        <h1>Manutenção Industrial Preditiva — Estimativa de RUL</h1>
-      </div>
-      <div class="controls">
-        <button class="btn" onclick="changeSlide(-1)">← Anterior</button>
-        <span id="slideIndicator" class="slide-counter">1 / 6</span>
-        <button class="btn btn-primary" onclick="changeSlide(1)">Próximo →</button>
-      </div>
+
+  <!-- Barra de Topo -->
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-badge">SCTEC • MÓDULO 2 • SEMANA 13</span>
+      <h1>Desenvolvimento de IA para Análise Preditiva — Apresentação Guiada (Item 5.4)</h1>
     </div>
-
-    <div class="progress-track">
-      <div id="progressBar" class="progress-bar" style="width: 16.66%"></div>
+    <div class="top-actions">
+      <button id="togglePromptBtn" class="btn-link active-prompt" onclick="toggleTeleprompter()">🎙️ Guia de Fala: VISÍVEL</button>
+      <a class="btn-link" href="http://127.0.0.1:8000/simulador" target="_blank">🛠️ Abrir Simulador (/simulador)</a>
+      <a class="btn-link" href="http://127.0.0.1:8000/docs" target="_blank">📄 Abrir Swagger (/docs)</a>
+      <a class="btn-link" href="http://127.0.0.1:8000/health" target="_blank">🩺 Status (/health)</a>
     </div>
+  </header>
 
-    <div class="deck">
-      <!-- Slide 1 -->
-      <div class="slide active">
+  <!-- Abas das 6 Perguntas do Edital -->
+  <nav class="nav-tabs">
+    <button class="tab-btn active" onclick="goToSlide(0)">1. Objetivo e Demonstração</button>
+    <button class="tab-btn" onclick="goToSlide(1)">2. Como Executar o Sistema</button>
+    <button class="tab-btn" onclick="goToSlide(2)">3. Organização das Tarefas</button>
+    <button class="tab-btn" onclick="goToSlide(3)">4. Branches Criadas (GitFlow)</button>
+    <button class="tab-btn" onclick="goToSlide(4)">5. Argumentação Técnica & Código</button>
+    <button class="tab-btn" onclick="goToSlide(5)">6. Pontos de Melhoria Futura</button>
+  </nav>
+
+  <!-- Área de Slides -->
+  <main class="slide-wrapper">
+
+    <!-- ==================== SLIDE 1 ==================== -->
+    <section class="slide active">
+      <div class="question-banner">
         <div>
-          <span class="slide-tag">Slide 1 • Contexto e Problema</span>
-          <h2 style="margin-top:10px;">Do Reativo ao Preditivo: Estimando a Vida Útil Restante (RUL)</h2>
-          <p class="subtitle">Previsão do tempo restante em horas até a próxima falha funcional de motores industriais utilizando dados reais da Microsoft Azure.</p>
+          <div class="q-tag">Pergunta 1 do Roteiro de Vídeo (Item 5.4)</div>
+          <h2>Qual o objetivo do sistema? E demonstração de funcionamento</h2>
         </div>
-        <div class="grid-3">
-          <div class="box">
-            <h3 class="text-danger">1. Manutenção Corretiva</h3>
-            <p>Atuação somente após a quebra do equipamento. Eleva o tempo de máquina parada (downtime) e custos de reparo de urgência.</p>
-          </div>
-          <div class="box">
-            <h3 class="text-warning">2. Preventiva Fixa</h3>
-            <p>Troca baseada em calendário fixo. Substitui componentes ainda saudáveis e não impede falhas inesperadas entre ciclos.</p>
-          </div>
-          <div class="box">
-            <h3 class="text-success">3. Preditiva Baseada em RUL</h3>
-            <p>Estima em <strong>horas</strong> a vida útil restante (Remaining Useful Life) e classifica o risco operacional em tempo real via API.</p>
-          </div>
+        <span class="badge b-norm">Desafio — Opção B (Base Pública Azure PdM)</span>
+      </div>
+
+      <div class="teleprompter">
+        <div class="teleprompter-title">🎙️ Roteiro sugerido para falar neste slide (0:00 – 2:00)</div>
+        <p>
+          "Olá! Neste projeto avaliativo do Módulo 2, desenvolvi uma solução completa de MLOps para <strong>Manutenção Industrial Preditiva</strong>, optando pela <strong>Opção B do desafio</strong> a partir da base pública <strong>Microsoft Azure Predictive Maintenance</strong>. O objetivo de negócio é prever a <strong>Vida Útil Restante (RUL - Remaining Useful Life)</strong> em horas de motores industriais a partir de sensores de tensão, rotação, pressão e vibração, somados à família do motor, idade, erros nas últimas 24h e dias desde a última manutenção. Agora vou demonstrar o funcionamento ao vivo no painel <code>/simulador</code> e na documentação interativa <code>/docs</code>."
+        </p>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi">
+          <div class="val">42.542</div>
+          <div class="lbl">Janelas Temporais Processadas (Azure)</div>
         </div>
-        <div class="box" style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:12px;">
-          <div>
-            <strong>Stack Tecnológica:</strong>
-            <p>Python 3.10+ • FastAPI • Scikit-Learn • MLflow • SQLAlchemy (SQLite) • Pytest • Docker</p>
-          </div>
-          <div>
-            <strong>Base de Dados:</strong>
-            <p>Azure Predictive Maintenance Dataset (5 tabelas integradas)</p>
-          </div>
+        <div class="kpi">
+          <div class="val">8 Variáveis</div>
+          <div class="lbl">7 Numéricas + 1 Categórica (model1..4)</div>
+        </div>
+        <div class="kpi">
+          <div class="val">R² = 0,3407</div>
+          <div class="lbl">Coeficiente de Determinação (Teste)</div>
+        </div>
+        <div class="kpi">
+          <div class="val">RAM Lifespan</div>
+          <div class="lbl">Inferência de Baixa Latência + SQLite</div>
         </div>
       </div>
 
-      <!-- Slide 2 -->
-      <div class="slide">
-        <div>
-          <span class="slide-tag">Slide 2 • Engenharia de Dados</span>
-          <h2 style="margin-top:10px;">Pipeline Vetorizado sobre as 5 Tabelas Azure PdM</h2>
-          <p class="subtitle">Fusão temporal em janelas de 6h via <code>pd.merge_asof</code> em <code>src/services/ml_service.py</code>, gerando <strong>42.542 registros</strong>.</p>
-        </div>
-        <div class="box" style="overflow-x:auto;">
+      <div class="grid-2">
+        <div class="card">
+          <h3>🎯 Problema de Negócio e Classificação de Risco</h3>
+          <p>Evita paradas não programadas na linha de produção e elimina trocas prematuras de componentes saudáveis, classificando cada predição em três faixas de decisão:</p>
           <table>
             <thead>
               <tr>
-                <th>Arquivo (/data)</th>
-                <th>Features / Target</th>
-                <th>Transformação Realizada</th>
+                <th>Status</th>
+                <th>Faixa de RUL</th>
+                <th>Recomendação Automática</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td><code>PdM_telemetry.csv</code></td>
-                <td><strong>volt, rotate, pressure, vibration</strong></td>
-                <td>Agregação de média a cada 6 horas para suavizar ruído de alta frequência</td>
+                <td><span class="badge b-crit">CRÍTICO</span></td>
+                <td><code>&le; 48 horas</code></td>
+                <td>Parada programada emergencial em até 48h.</td>
               </tr>
               <tr>
-                <td><code>PdM_machines.csv</code></td>
-                <td><strong>age</strong></td>
-                <td>Cruzamento por <code>machineID</code> (idade do equipamento em anos)</td>
+                <td><span class="badge b-warn">ALERTA</span></td>
+                <td><code>48h a 168h</code></td>
+                <td>Agendar inspeção e lubrificação no ciclo semanal.</td>
               </tr>
               <tr>
-                <td><code>PdM_errors.csv</code></td>
-                <td><strong>recent_errors</strong></td>
-                <td>Soma móvel de erros registrados nas últimas 24 horas</td>
-              </tr>
-              <tr>
-                <td><code>PdM_maint.csv</code></td>
-                <td><strong>days_since_maint</strong></td>
-                <td><code>merge_asof</code> (backward) calculando dias decorridos desde a última manutenção</td>
-              </tr>
-              <tr>
-                <td><code>PdM_failures.csv</code></td>
-                <td><strong class="text-success">rul_hours (Alvo)</strong></td>
-                <td><code>merge_asof</code> (forward) calculando horas até a falha seguinte (saturado em 720h)</td>
+                <td><span class="badge b-norm">NORMAL</span></td>
+                <td><code>&gt; 168 horas</code></td>
+                <td>Equipamento confiável. Manter plano de rotina.</td>
               </tr>
             </tbody>
           </table>
         </div>
-      </div>
 
-      <!-- Slide 3 -->
-      <div class="slide">
-        <div>
-          <span class="slide-tag">Slide 3 • Modelagem e Rastreamento MLflow</span>
-          <h2 style="margin-top:10px;">Performance do Modelo RandomForestRegressor</h2>
-          <p class="subtitle">Experimento <code>Azure_PdM_RUL_Prediction</code> rastreado via MLflow com artefato salvo em <code>models/model.joblib</code>.</p>
-        </div>
-        <div class="grid-3">
-          <div class="box">
-            <p>Coeficiente de Determinação (R²)</p>
-            <div class="metric-val text-success">0.2535</div>
-            <p>Baseline sem histórico de manutenção/erros: 0.0700 (+262%)</p>
-          </div>
-          <div class="box">
-            <p>Erro Médio Absoluto (MAE)</p>
-            <div class="metric-val text-primary">180.48 h</div>
-            <p>Redução de 27.64 horas em relação ao baseline inicial (208.12 h)</p>
-          </div>
-          <div class="box">
-            <p>Raiz do Erro Quadrático (RMSE)</p>
-            <div class="metric-val">213.14 h</div>
-            <p>Redução de 23.37 horas em relação ao baseline inicial (236.51 h)</p>
-          </div>
-        </div>
-        <div class="box">
-          <h3>Padrões de MLOps Implementados</h3>
+        <div class="card">
+          <h3>🖥️ Roteiro Rápido de Demonstração ao Vivo</h3>
           <ul>
-            <li>Logging de hiperparâmetros (<code>n_estimators=120</code>, <code>max_depth=14</code>), lista de features e métricas de regressão.</li>
-            <li>Serialização auditada com <code>skops_trusted_types</code> e carregamento com cache em memória (<code>_CACHED_MODEL</code>).</li>
-            <li>Fallback sintético calibrado caso a aplicação seja executada em ambiente sem os arquivos brutos CSV.</li>
+            <li><strong>1. Abrir <code>GET /health</code>:</strong> Mostrar o JSON retornando <code>"status": "online"</code> e <code>"model_loaded": true</code> (comprovando o modelo carregado em RAM).</li>
+            <li><strong>2. Abrir <code>GET /simulador</code>:</strong> Testar os botões de <em>Cenário Saudável</em> e <em>Cenário Severo</em>, mostrar o gráfico de degradação ajustado por turno (24h, 16h, 8h) e a tabela SQLite.</li>
+            <li><strong>3. Abrir Swagger (<code>/docs</code>):</strong> Executar <code>POST /predict</code> com dados válidos (<code>200 OK</code>) e depois com <code>"volt": -170</code> para demonstrar o bloqueio automático <code>422 Unprocessable Entity</code> pelo Pydantic.</li>
           </ul>
         </div>
       </div>
+    </section>
 
-      <!-- Slide 4 -->
-      <div class="slide">
+    <!-- ==================== SLIDE 2 ==================== -->
+    <section class="slide">
+      <div class="question-banner">
         <div>
-          <span class="slide-tag">Slide 4 • Simulador Interativo de RUL</span>
-          <h2 style="margin-top:10px;">Regra de Negócio e Prescrição de Manutenção</h2>
-          <p class="subtitle">Interaja com os controles abaixo para visualizar como a API classifica a criticidade do motor:</p>
+          <div class="q-tag">Pergunta 2 do Roteiro de Vídeo (Item 5.4)</div>
+          <h2>O que deve ser realizado para executar o sistema?</h2>
         </div>
-        <div class="grid-2">
-          <div class="box" style="display:flex; flex-direction:column; gap:14px;">
-            <div>
-              <div style="display:flex; justify-content:space-between; font-size:13px;">
-                <span>Vibração (m/s²)</span>
-                <strong id="vibVal">42</strong>
-              </div>
-              <input id="vibInput" type="range" min="25" max="75" value="42" oninput="updateSim()" />
-            </div>
-            <div>
-              <div style="display:flex; justify-content:space-between; font-size:13px;">
-                <span>Erros nas últimas 24h (recent_errors)</span>
-                <strong id="errVal">0</strong>
-              </div>
-              <input id="errInput" type="range" min="0" max="6" value="0" oninput="updateSim()" />
-            </div>
-            <div>
-              <div style="display:flex; justify-content:space-between; font-size:13px;">
-                <span>Dias desde a última manutenção</span>
-                <strong id="maintVal">12</strong>
-              </div>
-              <input id="maintInput" type="range" min="1" max="90" value="12" oninput="updateSim()" />
-            </div>
-          </div>
-
-          <div class="box" style="display:flex; flex-direction:column; justify-content:center; gap:12px;">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-              <span style="font-size:13px; color:var(--muted);">Vida Útil Restante Estimada</span>
-              <span id="simStatusBadge" class="status-pill" style="background:rgba(16,185,129,0.2); color:var(--success);">NORMAL</span>
-            </div>
-            <div id="simRulValue" class="metric-val">312.0 horas</div>
-            <p id="simRecText">Equipamento operando dentro dos parâmetros de confiabilidade. Manter plano de rotina.</p>
-            <p style="font-size:12px; border-top:1px solid var(--border); padding-top:10px;">
-              Faixas: <strong>CRÍTICO</strong> (≤ 48h) • <strong>ALERTA</strong> (48h a 168h) • <strong>NORMAL</strong> (> 168h)
-            </p>
-          </div>
-        </div>
+        <span class="badge b-norm">Item 5.1 e 5.2 — Reprodutibilidade</span>
       </div>
 
-      <!-- Slide 5 -->
-      <div class="slide">
-        <div>
-          <span class="slide-tag">Slide 5 • API FastAPI e Persistência SQLite</span>
-          <h2 style="margin-top:10px;">Contratos Pydantic V2 e Auditoria de Predições</h2>
-          <p class="subtitle">Todas as inferências são validadas fisicamente (<code>gt=0</code>, <code>ge=0</code>) e gravadas em <code>predictions.db</code> via SQLAlchemy.</p>
-        </div>
-        <div class="grid-2">
-          <div class="box">
-            <h3>Endpoints REST</h3>
-            <ul>
-              <li><code>GET /</code> — Informações gerais da API e link para o Swagger UI (<code>/docs</code>).</li>
-              <li><code>GET /health</code> — Verifica disponibilidade da API e carregamento do modelo ML.</li>
-              <li><code>POST /predict</code> — Estima o RUL em horas, classifica risco e grava log no SQLite.</li>
-              <li><code>GET /predictions</code> — Consulta histórico de predições com filtro por <code>machine_id</code>.</li>
-            </ul>
-          </div>
-          <div class="box">
-            <h3>Exemplo de Requisição (POST /predict)</h3>
-            <pre>{
-  "machine_id": 1,
-  "volt": 175.5,
-  "rotate": 425.0,
-  "pressure": 102.3,
-  "vibration": 43.1,
-  "age": 12.0,
-  "recent_errors": 1,
-  "days_since_maint": 10.5
-}</pre>
-          </div>
-        </div>
+      <div class="teleprompter">
+        <div class="teleprompter-title">🎙️ Roteiro sugerido para falar neste slide (2:00 – 3:00)</div>
+        <p>
+          "Para garantir que qualquer avaliador ou cientista de dados consiga reproduzir o projeto sem erros, todos os caminhos de arquivos utilizam <code>pathlib.Path</code> de forma 100% relativa e todas as dependências com versões estão listadas no <code>requirements.txt</code>. Basta criar e ativar o ambiente virtual <code>venv</code>, instalar o <code>requirements.txt</code> e iniciar o servidor ASGI Uvicorn apontando para <code>src.main:app</code>."
+        </p>
       </div>
 
-      <!-- Slide 6 -->
-      <div class="slide">
-        <div>
-          <span class="slide-tag">Slide 6 • Qualidade, Docker e CI/CD</span>
-          <h2 style="margin-top:10px;">Testes Automatizados e Containerização</h2>
-          <p class="subtitle">Pipeline GitHub Actions (<code>.github/workflows/ci.yml</code>) executando suíte Pytest e build Docker automatizado.</p>
-        </div>
-        <div class="grid-2">
-          <div class="box">
-            <h3>Suíte de Testes (6/6 Aprovados)</h3>
-            <ul>
-              <li>✅ <code>test_root_endpoint</code> — Rota principal e metadados</li>
-              <li>✅ <code>test_health_check_endpoint</code> — Status operacional e modelo</li>
-              <li>✅ <code>test_predict_success</code> — Inferência e persistência no SQLite</li>
-              <li>✅ <code>test_list_predictions_endpoint</code> — Listagem e filtro de auditoria</li>
-              <li>✅ <code>test_predict_negative_physical_values_rejected</code> — Bloqueio HTTP 422</li>
-              <li>✅ <code>test_predict_invalid_payload</code> — Validação de schema incompleto</li>
-            </ul>
-          </div>
-          <div class="box">
-            <h3>Comandos para Execução</h3>
-            <pre># Treinar modelo com rastreamento MLflow
+      <div class="grid-2">
+        <div class="card">
+          <h3>🚀 Passo a Passo de Instalação e Execução</h3>
+          <pre><span class="cmt"># 1. Criar e ativar o ambiente virtual isolado (venv)</span>
+python -m venv venv
+.\venv\Scripts\Activate.ps1
+
+<span class="cmt"># 2. Instalar dependências padronizadas</span>
+pip install -r requirements.txt
+
+<span class="cmt"># 3. (Opcional) Retreinar o Pipeline e logar no MLflow</span>
 python src/services/ml_service.py
 
-# Executar suíte de testes
-python -m pytest -v tests/
+<span class="cmt"># 4. Iniciar servidor ASGI Uvicorn</span>
+python -m uvicorn src.main:app --host 127.0.0.1 --port 8000 --reload
 
-# Iniciar API FastAPI
-uvicorn src.main:app --reload
+<span class="cmt"># 5. Executar a suíte de 8 testes automatizados</span>
+pytest -v tests/</pre>
+        </div>
 
-# Construir e rodar via Docker
-docker build -t manutencao-preditiva .
-docker run -p 8000:8000 manutencao-preditiva</pre>
-          </div>
+        <div class="card">
+          <h3>📦 Dependências Principais (requirements.txt)</h3>
+          <pre>fastapi&gt;=0.100.0          <span class="cmt"># Framework Web Assíncrono</span>
+uvicorn[standard]&gt;=0.22.0 <span class="cmt"># Servidor ASGI de Produção</span>
+pydantic&gt;=2.0.0           <span class="cmt"># Validação Estrita de Schemas</span>
+scikit-learn&gt;=1.3.0       <span class="cmt"># Pipeline, ColumnTransformer e RF</span>
+pandas&gt;=2.0.0             <span class="cmt"># Engenharia Temporal (merge_asof)</span>
+numpy&gt;=1.24.0             <span class="cmt"># Operações Vetorizadas</span>
+joblib&gt;=1.3.0             <span class="cmt"># Serialização do Artefato (.joblib)</span>
+sqlalchemy&gt;=2.0.0         <span class="cmt"># ORM para Persistência SQLite</span>
+mlflow&gt;=2.5.0             <span class="cmt"># Rastreamento de Experimentos</span>
+matplotlib&gt;=3.7.0         <span class="cmt"># Gráficos no Notebook de EDA</span>
+seaborn&gt;=0.12.0           <span class="cmt"># Matriz de Correlação</span>
+pytest&gt;=7.4.0 &amp; httpx     <span class="cmt"># Testes de Integração da API</span></pre>
         </div>
       </div>
+    </section>
 
-      <div class="footer-nav">
-        <span>Navegue usando as setas do teclado (← / →) ou os botões superiores</span>
-        <div id="dotsContainer" class="dots"></div>
+    <!-- ==================== SLIDE 3 ==================== -->
+    <section class="slide">
+      <div class="question-banner">
+        <div>
+          <div class="q-tag">Pergunta 3 do Roteiro de Vídeo (Item 5.4)</div>
+          <h2>Como você organizou as tarefas antes de começar a desenvolver?</h2>
+        </div>
+        <span class="badge b-norm">Fase 2 — Arquitetura em Camadas</span>
       </div>
+
+      <div class="teleprompter">
+        <div class="teleprompter-title">🎙️ Roteiro sugerido para falar neste slide (3:00 – 4:15)</div>
+        <p>
+          "Antes de iniciar a codificação, planejei o projeto desacoplando o trabalho nas 5 Fases Técnicas do edital. Primeiro estruturei o pipeline offline de dados e treinamento na pasta <code>/data</code>, <code>/notebooks</code> e <code>/models</code>. Em seguida, desenhei a arquitetura modular da API dentro de <code>/src</code> separando responsabilidades em 4 camadas independentes: <code>database</code>, <code>schemas</code>, <code>services</code> e <code>routers</code>, orquestradas pelo <code>main.py</code>."
+        </p>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3>📁 Arquitetura Modular em Camadas</h3>
+          <pre>/manutencao_industrial_preditiva
+├── /data                  <span class="cmt"># 5 CSVs da Azure (caminhos relativos)</span>
+├── /models                <span class="cmt"># model.joblib (9,1 MB) + metrics_report.json</span>
+├── /notebooks             <span class="cmt"># 01_eda_and_training.ipynb (EDA e Fases)</span>
+├── /src
+│   ├── /database          <span class="cmt"># SQLite + ORM SQLAlchemy (models.py)</span>
+│   ├── /schemas           <span class="cmt"># Contratos Pydantic V2 (prediction.py)</span>
+│   ├── /services          <span class="cmt"># Pipeline ML + Inferência (ml_service.py)</span>
+│   ├── /routers           <span class="cmt"># APIRouter (/health e /predict)</span>
+│   └── main.py            <span class="cmt"># Lifespan (@asynccontextmanager) + UI</span>
+├── /tests                 <span class="cmt"># 8 testes automatizados (test_api.py)</span>
+├── requirements.txt       <span class="cmt"># Reprodutibilidade do ambiente</span>
+└── README.md              <span class="cmt"># Documentação com os 6 itens do edital</span></pre>
+        </div>
+
+        <div class="card">
+          <h3>📋 Planejamento em 5 Etapas Sequenciais</h3>
+          <ul>
+            <li><strong>Etapa 1 (Dados &amp; ML Offline):</strong> Unificação das 5 tabelas Azure (`telemetry`, `machines`, `failures`, `errors`, `maint`), divisão Treino (70%) / Validação (15%) / Teste (15%) e exportação do `Pipeline` em `models/model.joblib`.</li>
+            <li><strong>Etapa 2 (Persistência &amp; Contratos):</strong> Criação da tabela `prediction_logs` no SQLite e definição dos schemas Pydantic com restrições físicas estritas (`Field`).</li>
+            <li><strong>Etapa 3 (Ciclo de Vida Lifespan):</strong> Carregamento único do artefato em memória RAM no startup da API.</li>
+            <li><strong>Etapa 4 (Rotas &amp; Idempotência):</strong> Construção dos endpoints `/health`, `/predict` e `/v1/predict` com tratamento semântico de exceções HTTP (`200`, `400`, `422`, `500`, `503`).</li>
+            <li><strong>Etapa 5 (Qualidade &amp; Documentação):</strong> Testes automatizados com Pytest, Simulador Web com Chart.js e documentação no `README.md`.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== SLIDE 4 ==================== -->
+    <section class="slide">
+      <div class="question-banner">
+        <div>
+          <div class="q-tag">Pergunta 4 do Roteiro de Vídeo (Item 5.4)</div>
+          <h2>Quais as branches você criou e quais os objetivos para cada uma?</h2>
+        </div>
+        <span class="badge b-norm">Item 5.3 — GitFlow Profissional</span>
+      </div>
+
+      <div class="teleprompter">
+        <div class="teleprompter-title">🎙️ Roteiro sugerido para falar neste slide (4:15 – 5:30)</div>
+        <p>
+          "Para o versionamento no Git e GitHub, apliquei o fluxo <strong>GitFlow</strong>. A partir da branch <code>main</code>, criei a branch integradora <code>develop</code> e, a partir dela, abri <strong>6 feature branches específicas</strong> para cada etapa do projeto. Todos os commits foram feitos com mensagens concisas no verbo imperativo — como <em>'implementa pipeline...'</em> ou <em>'define esquemas...'</em> — e todas as branches foram preservadas sem exclusão após o merge na <code>develop</code> e entrega final na <code>main</code>."
+        </p>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3>🌿 Mapa das Branches Criadas e Seus Objetivos</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Branch</th>
+                <th>Objetivo Técnico e Entregas</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="badge b-branch">main</span></td>
+                <td>Branch principal contendo a versão final estável e homologada.</td>
+              </tr>
+              <tr>
+                <td><span class="badge b-branch">develop</span></td>
+                <td>Branch integradora onde todas as <em>features</em> convergem durante o desenvolvimento.</td>
+              </tr>
+              <tr>
+                <td><span class="badge b-branch">feature/fase1-pipeline-ml</span></td>
+                <td>Ingestão dos 5 CSVs da Azure, Pipeline Scikit-Learn, <code>model.joblib</code> e Notebook EDA.</td>
+              </tr>
+              <tr>
+                <td><span class="badge b-branch">feature/fase2-arquitetura-database</span></td>
+                <td>Configuração do SQLAlchemy e tabela <code>PredictionLog</code> no SQLite.</td>
+              </tr>
+              <tr>
+                <td><span class="badge b-branch">feature/fase4-schemas-pydantic</span></td>
+                <td>Modelos <code>PredictionRequest</code>, <code>PredictionResponse</code> e <code>HealthResponse</code>.</td>
+              </tr>
+              <tr>
+                <td><span class="badge b-branch">feature/fase5-endpoints-routers</span></td>
+                <td>Rotas modulares <code>GET /health</code> e <code>POST /predict</code> com suporte a idempotência.</td>
+              </tr>
+              <tr>
+                <td><span class="badge b-branch">feature/fase3-lifespan-simulador</span></td>
+                <td>Gerenciador <code>@asynccontextmanager lifespan</code> no <code>main.py</code>, Simulador Web e Pytest.</td>
+              </tr>
+              <tr>
+                <td><span class="badge b-branch">feature/documentacao-readme</span></td>
+                <td>Documentação completa no <code>README.md</code> (item 5.2) e guia de apresentação.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <h3>🌳 Histórico Real do Repositório (git log --graph)</h3>
+          <pre>*   <span class="kw">main</span>: integra branch develop na main para entrega final
+|\  
+| *   <span class="kw">develop</span>: integra feature/documentacao-readme na develop
+| |\  
+| | * <span class="str">f459fe2</span> adiciona documentacao tecnica completa no readme e apresentacao
+| |/  
+| *   integra feature/fase3-lifespan-simulador na develop
+| |\  
+| | * <span class="str">8b781d0</span> adiciona suite de testes automatizados dos endpoints com pytest
+| | * <span class="str">d3a426f</span> implementa ciclo de vida lifespan e simulador web interativo
+| |/  
+| *   integra feature/fase5-endpoints-routers na develop
+| |\  
+| | * <span class="str">723bf2c</span> implementa endpoint de predicao com idempotencia e tratamento http
+| | * <span class="str">7dfb834</span> implementa endpoint de monitoramento de saude health
+| |/  
+| *   integra feature/fase4-schemas-pydantic na develop
+| |\  
+| | * <span class="str">3b86326</span> define esquemas de entrada e saida com validacao estrita pydantic
+| |/  
+| *   integra feature/fase2-arquitetura-database na develop
+| |\  
+| | * <span class="str">52744b1</span> implementa camada de persistencia sqlite com sqlalchemy
+| |/  
+| *   integra feature/fase1-pipeline-ml na develop
+| |\  
+| | * <span class="str">eb8a948</span> adiciona notebook explicativo de analise exploratoria e treinamento
+| | * <span class="str">e5f355e</span> implementa pipeline de pre-processamento e modelo random forest
+| | * <span class="str">df5eab3</span> adiciona base de dados publica azure predictive maintenance
+|/  
+* <span class="str">c557470</span> configura estrutura base do repositorio e dependencias</pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== SLIDE 5 ==================== -->
+    <section class="slide">
+      <div class="question-banner">
+        <div>
+          <div class="q-tag">Pergunta 5 do Roteiro de Vídeo (Item 5.4)</div>
+          <h2>Argumentação clara das escolhas técnicas realizadas no código</h2>
+        </div>
+        <span class="badge b-norm">Fases 1, 3, 4 e 5 — Explicação do Código</span>
+      </div>
+
+      <div class="teleprompter">
+        <div class="teleprompter-title">🎙️ Roteiro sugerido para falar neste slide (5:30 – 7:30)</div>
+        <p>
+          "Aqui estão os 4 pilares técnicos do código: <strong>(1) Na Fase 1</strong>, encapsulei o <code>SimpleImputer</code>, o <code>StandardScaler</code>, o <code>OneHotEncoder</code> e o <code>RandomForestRegressor</code> em um único <code>Pipeline</code> do Scikit-Learn, evitando vazamento de dados entre treino, validação e teste. <strong>(2) Na Fase 3</strong>, usei <code>@asynccontextmanager</code> com <code>lifespan</code> no FastAPI para carregar o arquivo <code>.joblib</code> uma única vez na memória RAM durante o startup, cumprindo a proibição de leitura de disco a cada requisição. <strong>(3) Na Fase 4</strong>, apliquei validação estrita com <code>Field(gt=0, le=..., pattern=...)</code> no Pydantic. E <strong>(4) Na Fase 5</strong>, tratei os status HTTP e implementei idempotência com SQLite."
+        </p>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3>1. Fase 1: Pipeline Scikit-Learn (src/services/ml_service.py)</h3>
+          <pre><span class="kw">def</span> <span class="fn">build_preprocessing_and_model_pipeline</span>(n_estimators=120, max_depth=14):
+    numeric_transformer = Pipeline(steps=[
+        (<span class="str">"imputer"</span>, SimpleImputer(strategy=<span class="str">"median"</span>)),
+        (<span class="str">"scaler"</span>, StandardScaler())
+    ])
+    categorical_transformer = Pipeline(steps=[
+        (<span class="str">"imputer"</span>, SimpleImputer(strategy=<span class="str">"most_frequent"</span>)),
+        (<span class="str">"encoder"</span>, OneHotEncoder(handle_unknown=<span class="str">"ignore"</span>, sparse_output=<span class="kw">False</span>))
+    ])
+    preprocessor = ColumnTransformer(transformers=[
+        (<span class="str">"num"</span>, numeric_transformer, NUMERICAL_FEATURES),
+        (<span class="str">"cat"</span>, categorical_transformer, CATEGORICAL_FEATURES)
+    ])
+    <span class="kw">return</span> Pipeline(steps=[
+        (<span class="str">"preprocessor"</span>, preprocessor),
+        (<span class="str">"regressor"</span>, RandomForestRegressor(n_estimators=n_estimators, max_depth=max_depth))
+    ])</pre>
+        </div>
+
+        <div class="card">
+          <h3>2. Fase 3: Ciclo de Vida em RAM — Lifespan (src/main.py)</h3>
+          <pre><span class="kw">@asynccontextmanager</span>
+<span class="kw">async def</span> <span class="fn">lifespan</span>(app: FastAPI):
+    <span class="cmt"># Executado UMA ÚNICA VEZ na inicialização do servidor ASGI</span>
+    Base.metadata.create_all(bind=engine)
+    model = load_model_on_startup()  <span class="cmt"># Carrega models/model.joblib na RAM</span>
+    app.state.model = model
+    <span class="kw">yield</span>
+    <span class="cmt"># Executado no desligamento (shutdown) para liberar recursos</span>
+    clear_model_cache()
+
+app = FastAPI(title=<span class="str">"API de Manutenção Preditiva"</span>, lifespan=lifespan)</pre>
+        </div>
+
+        <div class="card">
+          <h3>3. Fase 4: Validação Estrita Pydantic (src/schemas/prediction.py)</h3>
+          <pre><span class="kw">class</span> <span class="fn">PredictionRequest</span>(BaseModel):
+    machine_id: int = Field(..., gt=0, le=10000)
+    model_type: str = Field(default=<span class="str">"model1"</span>, pattern=<span class="str">r"^model[1-4]$"</span>)
+    volt: float = Field(..., gt=0, le=500.0, description=<span class="str">"Tensão (V)"</span>)
+    rotate: float = Field(..., gt=0, le=2000.0, description=<span class="str">"Rotação (RPM)"</span>)
+    pressure: float = Field(..., gt=0, le=500.0, description=<span class="str">"Pressão (psi)"</span>)
+    vibration: float = Field(..., ge=0, le=300.0, description=<span class="str">"Vibração (m/s²)"</span>)</pre>
+        </div>
+
+        <div class="card">
+          <h3>4. Fase 5: Idempotência e Semântica HTTP (src/routers/predict.py)</h3>
+          <pre><span class="kw">@router.post</span>(<span class="str">"/predict"</span>, response_model=PredictionResponse, status_code=200)
+<span class="kw">def</span> <span class="fn">predict</span>(request: PredictionRequest, idempotency_key: Optional[str] = Header(<span class="kw">None</span>)):
+    <span class="kw">try</span>:
+        <span class="cmt"># Evita duplicação no SQLite em caso de retentativa de rede</span>
+        <span class="kw">if</span> idempotency_key <span class="kw">and</span> existing_log:
+            <span class="kw">return</span> existing_log
+        result = predict_rul(...) <span class="cmt"># Consome modelo da memória RAM</span>
+    <span class="kw">except</span> ValueError <span class="kw">as</span> ve:
+        <span class="kw">raise</span> HTTPException(status_code=400, detail=str(ve))
+    <span class="kw">except</span> RuntimeError <span class="kw">as</span> re:
+        <span class="kw">raise</span> HTTPException(status_code=503, detail=str(re))</pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== SLIDE 6 ==================== -->
+    <section class="slide">
+      <div class="question-banner">
+        <div>
+          <div class="q-tag">Pergunta 6 do Roteiro de Vídeo (Item 5.4)</div>
+          <h2>Você acha que faltou algo no seu código que você poderia melhorar?</h2>
+        </div>
+        <span class="badge b-norm">Visão Crítica e Evolução de MLOps</span>
+      </div>
+
+      <div class="teleprompter">
+        <div class="teleprompter-title">🎙️ Roteiro sugerido para falar neste slide (7:30 – 8:30)</div>
+        <p>
+          "Para concluir: embora o sistema cumpra 100% dos requisitos funcionais e arquiteturais do projeto — incluindo pipeline serializado, carregamento em RAM via <code>lifespan</code>, validação Pydantic, persistência SQLite com idempotência e testes automatizados —, em um cenário industrial de larga escala eu implementaria três melhorias futuras: <strong>(1)</strong> testar modelos baseados em Gradient Boosting (como LightGBM/XGBoost) ou redes LSTM para capturar dependências temporais mais longas; <strong>(2)</strong> adicionar monitoramento contínuo de <em>Data Drift</em> e <em>Model Drift</em> em produção; e <strong>(3)</strong> migrar o banco local SQLite para PostgreSQL/TimescaleDB com autenticação JWT nos endpoints. Muito obrigado!"
+        </p>
+      </div>
+
+      <div class="grid-3">
+        <div class="card">
+          <h3>📈 1. Evolução da Modelagem Preditiva</h3>
+          <p>O <code>RandomForestRegressor</code> atingiu <strong>R² = 0,3407</strong> sobre dados ruidosos de sensores reais. Como próximo passo, poderíamos experimentar:</p>
+          <ul>
+            <li><strong>XGBoost / LightGBM</strong> com otimização Bayesiana de hiperparâmetros (Optuna).</li>
+            <li><strong>Redes Recorrentes (LSTM / Temporal Fusion Transformers)</strong> utilizando janelas deslizantes de 48h e 72h de telemetria contínua.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h3>🔍 2. Monitoramento de Data &amp; Concept Drift</h3>
+          <p>Em plantas industriais, o envelhecimento mecânico altera a distribuição estatística dos sensores ao longo dos meses:</p>
+          <ul>
+            <li>Integrar <strong>EvidentlyAI</strong> ou <strong>Prometheus + Grafana</strong> sobre a tabela <code>prediction_logs</code>.</li>
+            <li>Disparar retreinamento automático do pipeline no MLflow quando for detectado desvio estatístico (<em>drift</em>) nas variáveis de entrada.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h3>🔐 3. Segurança e Escalabilidade de Banco</h3>
+          <p>Para suportar milhares de motores enviando telemetria simultaneamente via gateways IoT:</p>
+          <ul>
+            <li>Migrar do <strong>SQLite</strong> local para <strong>PostgreSQL / TimescaleDB</strong> dedicado a séries temporais.</li>
+            <li>Adicionar autenticação via <strong>API Key / OAuth2 JWT</strong> e controle de <em>Rate Limiting</em> nos endpoints de inferência.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Rodapé com Navegação de Slides -->
+  <footer class="footer-nav">
+    <button class="nav-btn" onclick="prevSlide()">⬅️ Pergunta Anterior</button>
+    <div id="slideIndicator" style="color: var(--muted); font-size: 13.5px; font-weight: 600;">
+      Pergunta 1 de 6 — Use as setas do teclado (← / →) para navegar
     </div>
-  </div>
+    <button class="nav-btn" onclick="nextSlide()">Próxima Pergunta ➡️</button>
+  </footer>
 
   <script>
     let currentSlide = 0;
     const slides = document.querySelectorAll('.slide');
-    const totalSlides = slides.length;
+    const tabs = document.querySelectorAll('.tab-btn');
     const indicator = document.getElementById('slideIndicator');
-    const progressBar = document.getElementById('progressBar');
-    const dotsContainer = document.getElementById('dotsContainer');
-
-    function renderDots() {
-      dotsContainer.innerHTML = '';
-      for (let i = 0; i < totalSlides; i++) {
-        const dot = document.createElement('button');
-        dot.className = 'dot' + (i === currentSlide ? ' active' : '');
-        dot.onclick = () => goToSlide(i);
-        dotsContainer.appendChild(dot);
-      }
-    }
+    let promptVisible = true;
 
     function goToSlide(index) {
-      currentSlide = (index + totalSlides) % totalSlides;
+      if (index < 0) index = 0;
+      if (index >= slides.length) index = slides.length - 1;
+      currentSlide = index;
+
       slides.forEach((s, i) => s.classList.toggle('active', i === currentSlide));
-      indicator.textContent = (currentSlide + 1) + ' / ' + totalSlides;
-      progressBar.style.width = (((currentSlide + 1) / totalSlides) * 100) + '%';
-      renderDots();
+      tabs.forEach((t, i) => t.classList.toggle('active', i === currentSlide));
+      indicator.textContent = `Pergunta ${currentSlide + 1} de ${slides.length} — Use as setas do teclado (← / →) para navegar`;
     }
 
-    function changeSlide(delta) {
-      goToSlide(currentSlide + delta);
+    function nextSlide() { goToSlide(currentSlide + 1); }
+    function prevSlide() { goToSlide(currentSlide - 1); }
+
+    function toggleTeleprompter() {
+      promptVisible = !promptVisible;
+      document.querySelectorAll('.teleprompter').forEach(el => {
+        el.style.display = promptVisible ? 'block' : 'none';
+      });
+      const btn = document.getElementById('togglePromptBtn');
+      btn.textContent = promptVisible ? '🎙️ Guia de Fala: VISÍVEL' : '🎙️ Guia de Fala: OCULTO';
+      btn.classList.toggle('active-prompt', promptVisible);
     }
 
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'ArrowRight') changeSlide(1);
-      if (e.key === 'ArrowLeft') changeSlide(-1);
+      if (e.key === 'ArrowRight') nextSlide();
+      if (e.key === 'ArrowLeft') prevSlide();
     });
-
-    function updateSim() {
-      const vib = parseFloat(document.getElementById('vibInput').value);
-      const err = parseInt(document.getElementById('errInput').value, 10);
-      const maint = parseFloat(document.getElementById('maintInput').value);
-
-      document.getElementById('vibVal').textContent = vib;
-      document.getElementById('errVal').textContent = err;
-      document.getElementById('maintVal').textContent = maint;
-
-      const penalty = Math.max(0, vib - 40) * 6.5 + err * 45 + maint * 2.1;
-      const rul = Math.max(8, Math.round((420 - penalty) * 10) / 10);
-
-      const badge = document.getElementById('simStatusBadge');
-      const rulEl = document.getElementById('simRulValue');
-      const recEl = document.getElementById('simRecText');
-
-      rulEl.textContent = rul.toFixed(1) + ' horas';
-
-      if (rul <= 48) {
-        badge.textContent = 'CRÍTICO';
-        badge.style.background = 'rgba(239,68,68,0.2)';
-        badge.style.color = 'var(--danger)';
-        recEl.textContent = 'Parada programada emergencial em até 48 horas. Risco iminente de colapso de componente.';
-      } else if (rul <= 168) {
-        badge.textContent = 'ALERTA';
-        badge.style.background = 'rgba(245,158,11,0.2)';
-        badge.style.color = 'var(--warning)';
-        recEl.textContent = 'Agendar inspeção e lubrificação/troca de peças no próximo ciclo de manutenção semanal.';
-      } else {
-        badge.textContent = 'NORMAL';
-        badge.style.background = 'rgba(16,185,129,0.2)';
-        badge.style.color = 'var(--success)';
-        recEl.textContent = 'Equipamento operando dentro dos parâmetros de confiabilidade. Manter plano de rotina.';
-      }
-    }
-
-    renderDots();
-    updateSim();
   </script>
 </body>
 </html>
