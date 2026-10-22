@@ -1,0 +1,17 @@
+.git
+.gitignore
+.github
+.venv
+venv
+env
+__pycache__
+*.py[cod]
+*$py.class
+.pytest_cache
+mlruns
+*.db
+predictions.db
+mlflow.db
+notebooks
+.vscode
+.idea

@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+env/
+venv/
+*.env
+.vscode/
+.idea/
+.ipynb_checkpoints/
+
+# Bancos de dados de execução local e logs de experimentos
+*.db
+predictions.db
+mlflow.db
+mlruns/
+.pytest_cache/
