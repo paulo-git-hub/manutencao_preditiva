@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Apresentação: Manutenção Industrial Preditiva (SENAI)</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --surface: #0b1120;
+      --border: #334155;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --primary: #38bdf8;
+      --primary-dark: #0284c7;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding: 24px;
+    }
+    .container {
+      max-width: 1040px;
+      width: 100%;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .header {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .badge-top {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--primary);
+    }
+    .header h1 {
+      font-size: 20px;
+      margin-top: 4px;
+    }
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    button.btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      transition: all 0.2s;
+    }
+    button.btn-primary {
+      background: var(--primary-dark);
+      border-color: var(--primary);
+      color: #fff;
+    }
+    button.btn:hover { opacity: 0.85; }
+    .slide-counter {
+      font-size: 14px;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 8px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+    }
+    .progress-track {
+      width: 100%;
+      height: 6px;
+      background: var(--border);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .progress-bar {
+      height: 100%;
+      background: var(--primary);
+      transition: width 0.3s ease;
+    }
+    .deck {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 36px;
+      min-height: 460px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    }
+    .slide { display: none; flex-direction: column; gap: 24px; }
+    .slide.active { display: flex; }
+    .slide-tag {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 99px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      width: fit-content;
+    }
+    .slide h2 { font-size: 26px; line-height: 1.25; }
+    .slide p.subtitle { color: var(--muted); font-size: 15px; line-height: 1.5; }
+    .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 18px; }
+    .box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px;
+    }
+    .box h3 { font-size: 15px; margin-bottom: 8px; }
+    .box p, .box li { font-size: 13px; color: var(--muted); line-height: 1.55; }
+    .box ul { padding-left: 18px; display: flex; flex-direction: column; gap: 6px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td {
+      padding: 10px 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    th { color: var(--muted); font-weight: 600; }
+    code, pre {
+      font-family: Consolas, Monaco, "Courier New", monospace;
+      font-size: 12.5px;
+    }
+    pre {
+      background: #070b14;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      overflow-x: auto;
+      color: #e2e8f0;
+      line-height: 1.45;
+    }
+    .metric-val { font-size: 30px; font-weight: 800; margin: 6px 0; }
+    .text-success { color: var(--success); }
+    .text-warning { color: var(--warning); }
+    .text-danger { color: var(--danger); }
+    .text-primary { color: var(--primary); }
+    .footer-nav {
+      margin-top: 28px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .dots { display: flex; gap: 8px; }
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 99px;
+      background: var(--border);
+      border: none;
+      cursor: pointer;
+    }
+    .dot.active { background: var(--primary); width: 22px; transition: all 0.2s; }
+    input[type="range"] { width: 100%; accent-color: var(--primary); margin-top: 6px; }
+    .status-pill {
+      padding: 4px 12px;
+      border-radius: 99px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div>
+        <div class="badge-top">Projeto MLOps • Edital SENAI</div>
+        <h1>Manutenção Industrial Preditiva — Estimativa de RUL</h1>
+      </div>
+      <div class="controls">
+        <button class="btn" onclick="changeSlide(-1)">← Anterior</button>
+        <span id="slideIndicator" class="slide-counter">1 / 6</span>
+        <button class="btn btn-primary" onclick="changeSlide(1)">Próximo →</button>
+      </div>
+    </div>
+
+    <div class="progress-track">
+      <div id="progressBar" class="progress-bar" style="width: 16.66%"></div>
+    </div>
+
+    <div class="deck">
+      <!-- Slide 1 -->
+      <div class="slide active">
+        <div>
+          <span class="slide-tag">Slide 1 • Contexto e Problema</span>
+          <h2 style="margin-top:10px;">Do Reativo ao Preditivo: Estimando a Vida Útil Restante (RUL)</h2>
+          <p class="subtitle">Previsão do tempo restante em horas até a próxima falha funcional de motores industriais utilizando dados reais da Microsoft Azure.</p>
+        </div>
+        <div class="grid-3">
+          <div class="box">
+            <h3 class="text-danger">1. Manutenção Corretiva</h3>
+            <p>Atuação somente após a quebra do equipamento. Eleva o tempo de máquina parada (downtime) e custos de reparo de urgência.</p>
+          </div>
+          <div class="box">
+            <h3 class="text-warning">2. Preventiva Fixa</h3>
+            <p>Troca baseada em calendário fixo. Substitui componentes ainda saudáveis e não impede falhas inesperadas entre ciclos.</p>
+          </div>
+          <div class="box">
+            <h3 class="text-success">3. Preditiva Baseada em RUL</h3>
+            <p>Estima em <strong>horas</strong> a vida útil restante (Remaining Useful Life) e classifica o risco operacional em tempo real via API.</p>
+          </div>
+        </div>
+        <div class="box" style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+          <div>
+            <strong>Stack Tecnológica:</strong>
+            <p>Python 3.10+ • FastAPI • Scikit-Learn • MLflow • SQLAlchemy (SQLite) • Pytest • Docker</p>
+          </div>
+          <div>
+            <strong>Base de Dados:</strong>
+            <p>Azure Predictive Maintenance Dataset (5 tabelas integradas)</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 2 -->
+      <div class="slide">
+        <div>
+          <span class="slide-tag">Slide 2 • Engenharia de Dados</span>
+          <h2 style="margin-top:10px;">Pipeline Vetorizado sobre as 5 Tabelas Azure PdM</h2>
+          <p class="subtitle">Fusão temporal em janelas de 6h via <code>pd.merge_asof</code> em <code>src/services/ml_service.py</code>, gerando <strong>42.542 registros</strong>.</p>
+        </div>
+        <div class="box" style="overflow-x:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Arquivo (/data)</th>
+                <th>Features / Target</th>
+                <th>Transformação Realizada</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>PdM_telemetry.csv</code></td>
+                <td><strong>volt, rotate, pressure, vibration</strong></td>
+                <td>Agregação de média a cada 6 horas para suavizar ruído de alta frequência</td>
+              </tr>
+              <tr>
+                <td><code>PdM_machines.csv</code></td>
+                <td><strong>age</strong></td>
+                <td>Cruzamento por <code>machineID</code> (idade do equipamento em anos)</td>
+              </tr>
+              <tr>
+                <td><code>PdM_errors.csv</code></td>
+                <td><strong>recent_errors</strong></td>
+                <td>Soma móvel de erros registrados nas últimas 24 horas</td>
+              </tr>
+              <tr>
+                <td><code>PdM_maint.csv</code></td>
+                <td><strong>days_since_maint</strong></td>
+                <td><code>merge_asof</code> (backward) calculando dias decorridos desde a última manutenção</td>
+              </tr>
+              <tr>
+                <td><code>PdM_failures.csv</code></td>
+                <td><strong class="text-success">rul_hours (Alvo)</strong></td>
+                <td><code>merge_asof</code> (forward) calculando horas até a falha seguinte (saturado em 720h)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Slide 3 -->
+      <div class="slide">
+        <div>
+          <span class="slide-tag">Slide 3 • Modelagem e Rastreamento MLflow</span>
+          <h2 style="margin-top:10px;">Performance do Modelo RandomForestRegressor</h2>
+          <p class="subtitle">Experimento <code>Azure_PdM_RUL_Prediction</code> rastreado via MLflow com artefato salvo em <code>models/model.joblib</code>.</p>
+        </div>
+        <div class="grid-3">
+          <div class="box">
+            <p>Coeficiente de Determinação (R²)</p>
+            <div class="metric-val text-success">0.2535</div>
+            <p>Baseline sem histórico de manutenção/erros: 0.0700 (+262%)</p>
+          </div>
+          <div class="box">
+            <p>Erro Médio Absoluto (MAE)</p>
+            <div class="metric-val text-primary">180.48 h</div>
+            <p>Redução de 27.64 horas em relação ao baseline inicial (208.12 h)</p>
+          </div>
+          <div class="box">
+            <p>Raiz do Erro Quadrático (RMSE)</p>
+            <div class="metric-val">213.14 h</div>
+            <p>Redução de 23.37 horas em relação ao baseline inicial (236.51 h)</p>
+          </div>
+        </div>
+        <div class="box">
+          <h3>Padrões de MLOps Implementados</h3>
+          <ul>
+            <li>Logging de hiperparâmetros (<code>n_estimators=120</code>, <code>max_depth=14</code>), lista de features e métricas de regressão.</li>
+            <li>Serialização auditada com <code>skops_trusted_types</code> e carregamento com cache em memória (<code>_CACHED_MODEL</code>).</li>
+            <li>Fallback sintético calibrado caso a aplicação seja executada em ambiente sem os arquivos brutos CSV.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Slide 4 -->
+      <div class="slide">
+        <div>
+          <span class="slide-tag">Slide 4 • Simulador Interativo de RUL</span>
+          <h2 style="margin-top:10px;">Regra de Negócio e Prescrição de Manutenção</h2>
+          <p class="subtitle">Interaja com os controles abaixo para visualizar como a API classifica a criticidade do motor:</p>
+        </div>
+        <div class="grid-2">
+          <div class="box" style="display:flex; flex-direction:column; gap:14px;">
+            <div>
+              <div style="display:flex; justify-content:space-between; font-size:13px;">
+                <span>Vibração (m/s²)</span>
+                <strong id="vibVal">42</strong>
+              </div>
+              <input id="vibInput" type="range" min="25" max="75" value="42" oninput="updateSim()" />
+            </div>
+            <div>
+              <div style="display:flex; justify-content:space-between; font-size:13px;">
+                <span>Erros nas últimas 24h (recent_errors)</span>
+                <strong id="errVal">0</strong>
+              </div>
+              <input id="errInput" type="range" min="0" max="6" value="0" oninput="updateSim()" />
+            </div>
+            <div>
+              <div style="display:flex; justify-content:space-between; font-size:13px;">
+                <span>Dias desde a última manutenção</span>
+                <strong id="maintVal">12</strong>
+              </div>
+              <input id="maintInput" type="range" min="1" max="90" value="12" oninput="updateSim()" />
+            </div>
+          </div>
+
+          <div class="box" style="display:flex; flex-direction:column; justify-content:center; gap:12px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-size:13px; color:var(--muted);">Vida Útil Restante Estimada</span>
+              <span id="simStatusBadge" class="status-pill" style="background:rgba(16,185,129,0.2); color:var(--success);">NORMAL</span>
+            </div>
+            <div id="simRulValue" class="metric-val">312.0 horas</div>
+            <p id="simRecText">Equipamento operando dentro dos parâmetros de confiabilidade. Manter plano de rotina.</p>
+            <p style="font-size:12px; border-top:1px solid var(--border); padding-top:10px;">
+              Faixas: <strong>CRÍTICO</strong> (≤ 48h) • <strong>ALERTA</strong> (48h a 168h) • <strong>NORMAL</strong> (> 168h)
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 5 -->
+      <div class="slide">
+        <div>
+          <span class="slide-tag">Slide 5 • API FastAPI e Persistência SQLite</span>
+          <h2 style="margin-top:10px;">Contratos Pydantic V2 e Auditoria de Predições</h2>
+          <p class="subtitle">Todas as inferências são validadas fisicamente (<code>gt=0</code>, <code>ge=0</code>) e gravadas em <code>predictions.db</code> via SQLAlchemy.</p>
+        </div>
+        <div class="grid-2">
+          <div class="box">
+            <h3>Endpoints REST</h3>
+            <ul>
+              <li><code>GET /</code> — Informações gerais da API e link para o Swagger UI (<code>/docs</code>).</li>
+              <li><code>GET /health</code> — Verifica disponibilidade da API e carregamento do modelo ML.</li>
+              <li><code>POST /predict</code> — Estima o RUL em horas, classifica risco e grava log no SQLite.</li>
+              <li><code>GET /predictions</code> — Consulta histórico de predições com filtro por <code>machine_id</code>.</li>
+            </ul>
+          </div>
+          <div class="box">
+            <h3>Exemplo de Requisição (POST /predict)</h3>
+            <pre>{
+  "machine_id": 1,
+  "volt": 175.5,
+  "rotate": 425.0,
+  "pressure": 102.3,
+  "vibration": 43.1,
+  "age": 12.0,
+  "recent_errors": 1,
+  "days_since_maint": 10.5
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 6 -->
+      <div class="slide">
+        <div>
+          <span class="slide-tag">Slide 6 • Qualidade, Docker e CI/CD</span>
+          <h2 style="margin-top:10px;">Testes Automatizados e Containerização</h2>
+          <p class="subtitle">Pipeline GitHub Actions (<code>.github/workflows/ci.yml</code>) executando suíte Pytest e build Docker automatizado.</p>
+        </div>
+        <div class="grid-2">
+          <div class="box">
+            <h3>Suíte de Testes (6/6 Aprovados)</h3>
+            <ul>
+              <li>✅ <code>test_root_endpoint</code> — Rota principal e metadados</li>
+              <li>✅ <code>test_health_check_endpoint</code> — Status operacional e modelo</li>
+              <li>✅ <code>test_predict_success</code> — Inferência e persistência no SQLite</li>
+              <li>✅ <code>test_list_predictions_endpoint</code> — Listagem e filtro de auditoria</li>
+              <li>✅ <code>test_predict_negative_physical_values_rejected</code> — Bloqueio HTTP 422</li>
+              <li>✅ <code>test_predict_invalid_payload</code> — Validação de schema incompleto</li>
+            </ul>
+          </div>
+          <div class="box">
+            <h3>Comandos para Execução</h3>
+            <pre># Treinar modelo com rastreamento MLflow
+python src/services/ml_service.py
+
+# Executar suíte de testes
+python -m pytest -v tests/
+
+# Iniciar API FastAPI
+uvicorn src.main:app --reload
+
+# Construir e rodar via Docker
+docker build -t manutencao-preditiva .
+docker run -p 8000:8000 manutencao-preditiva</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-nav">
+        <span>Navegue usando as setas do teclado (← / →) ou os botões superiores</span>
+        <div id="dotsContainer" class="dots"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.slide');
+    const totalSlides = slides.length;
+    const indicator = document.getElementById('slideIndicator');
+    const progressBar = document.getElementById('progressBar');
+    const dotsContainer = document.getElementById('dotsContainer');
+
+    function renderDots() {
+      dotsContainer.innerHTML = '';
+      for (let i = 0; i < totalSlides; i++) {
+        const dot = document.createElement('button');
+        dot.className = 'dot' + (i === currentSlide ? ' active' : '');
+        dot.onclick = () => goToSlide(i);
+        dotsContainer.appendChild(dot);
+      }
+    }
+
+    function goToSlide(index) {
+      currentSlide = (index + totalSlides) % totalSlides;
+      slides.forEach((s, i) => s.classList.toggle('active', i === currentSlide));
+      indicator.textContent = (currentSlide + 1) + ' / ' + totalSlides;
+      progressBar.style.width = (((currentSlide + 1) / totalSlides) * 100) + '%';
+      renderDots();
+    }
+
+    function changeSlide(delta) {
+      goToSlide(currentSlide + delta);
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight') changeSlide(1);
+      if (e.key === 'ArrowLeft') changeSlide(-1);
+    });
+
+    function updateSim() {
+      const vib = parseFloat(document.getElementById('vibInput').value);
+      const err = parseInt(document.getElementById('errInput').value, 10);
+      const maint = parseFloat(document.getElementById('maintInput').value);
+
+      document.getElementById('vibVal').textContent = vib;
+      document.getElementById('errVal').textContent = err;
+      document.getElementById('maintVal').textContent = maint;
+
+      const penalty = Math.max(0, vib - 40) * 6.5 + err * 45 + maint * 2.1;
+      const rul = Math.max(8, Math.round((420 - penalty) * 10) / 10);
+
+      const badge = document.getElementById('simStatusBadge');
+      const rulEl = document.getElementById('simRulValue');
+      const recEl = document.getElementById('simRecText');
+
+      rulEl.textContent = rul.toFixed(1) + ' horas';
+
+      if (rul <= 48) {
+        badge.textContent = 'CRÍTICO';
+        badge.style.background = 'rgba(239,68,68,0.2)';
+        badge.style.color = 'var(--danger)';
+        recEl.textContent = 'Parada programada emergencial em até 48 horas. Risco iminente de colapso de componente.';
+      } else if (rul <= 168) {
+        badge.textContent = 'ALERTA';
+        badge.style.background = 'rgba(245,158,11,0.2)';
+        badge.style.color = 'var(--warning)';
+        recEl.textContent = 'Agendar inspeção e lubrificação/troca de peças no próximo ciclo de manutenção semanal.';
+      } else {
+        badge.textContent = 'NORMAL';
+        badge.style.background = 'rgba(16,185,129,0.2)';
+        badge.style.color = 'var(--success)';
+        recEl.textContent = 'Equipamento operando dentro dos parâmetros de confiabilidade. Manter plano de rotina.';
+      }
+    }
+
+    renderDots();
+    updateSim();
+  </script>
+</body>
+</html>
