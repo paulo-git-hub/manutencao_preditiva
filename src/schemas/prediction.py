@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import Dict, List, Optional
 from pydantic import BaseModel, Field, ConfigDict
 
 
@@ -75,6 +75,11 @@ class PredictionRequest(BaseModel):
         description="Dias decorridos desde a última manutenção (0 a 3650)",
         json_schema_extra={"example": 12.5}
     )
+    alert_email: Optional[str] = Field(
+        default=None,
+        description="E-mail opcional de destino para receber alerta automático caso o status seja ALERTA ou CRÍTICO",
+        json_schema_extra={"example": "paulo@sbsti.com"}
+    )
 
 
 class PredictionResponse(BaseModel):
@@ -82,6 +87,18 @@ class PredictionResponse(BaseModel):
     predicted_rul_hours: float = Field(..., ge=0, description="Vida útil restante estimada em horas (RUL)")
     status: str = Field(..., description="Classificação de criticidade: CRÍTICO, ALERTA ou NORMAL")
     recommendation: str = Field(..., description="Ação preventiva recomendada para a equipe de manutenção")
+    email_alert_triggered: bool = Field(
+        default=False,
+        description="Indica se um alerta automático via e-mail foi disparado (para status CRÍTICO ou ALERTA)"
+    )
+    email_delivery_mode: Optional[str] = Field(
+        default=None,
+        description="Modo de entrega do alerta de e-mail (SMTP_SENT, SIMULATED_INBOX ou None)"
+    )
+    email_recipient: Optional[str] = Field(
+        default=None,
+        description="E-mail destinatário efetivamente utilizado no alerta"
+    )
 
 
 class PredictionLogSchema(BaseModel):
@@ -90,6 +107,7 @@ class PredictionLogSchema(BaseModel):
     id: int
     idempotency_key: Optional[str] = None
     machine_id: int
+    model_type: Optional[str] = "model1"
     volt: float
     rotate: float
     pressure: float
@@ -101,3 +119,31 @@ class PredictionLogSchema(BaseModel):
     status: str
     recommendation: Optional[str] = None
     timestamp: datetime
+
+
+class EmailAlertLogSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    prediction_id: Optional[int] = None
+    machine_id: int
+    model_type: Optional[str] = "model1"
+    predicted_rul_hours: float
+    status: str
+    recipient: str
+    subject: str
+    body: str
+    delivery_mode: str
+    timestamp: datetime
+
+
+class MotorsByRulBandResponse(BaseModel):
+    total_motors: int = Field(..., description="Quantidade total de motores únicos monitorados")
+    counts_by_band: Dict[str, int] = Field(
+        ...,
+        description="Contagem de motores em cada uma das 3 faixas de RUL (CRÍTICO, ALERTA, NORMAL)"
+    )
+    motors: List[PredictionLogSchema] = Field(
+        ...,
+        description="Lista do estado mais recente de cada motor filtrado pela faixa de RUL"
+    )

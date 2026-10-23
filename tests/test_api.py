@@ -37,6 +37,8 @@ def test_root_endpoint(client: TestClient):
     data = response.json()
     assert "message" in data
     assert data["docs_url"] == "/docs"
+    assert data["motors_by_status_url"] == "/motors/status"
+    assert data["email_alerts_url"] == "/alerts"
 
 
 def test_health_check_endpoint(client: TestClient):
@@ -67,6 +69,7 @@ def test_predict_success(client: TestClient):
     assert data["predicted_rul_hours"] > 0
     assert data["status"] in ["CRÍTICO", "ALERTA", "NORMAL"]
     assert "recommendation" in data
+    assert "email_alert_triggered" in data
 
 
 def test_predict_v1_alias_success(client: TestClient):
@@ -122,6 +125,22 @@ def test_list_predictions_endpoint(client: TestClient):
     assert logs[0]["machine_id"] == 1
     assert "predicted_rul_hours" in logs[0]
     assert "timestamp" in logs[0]
+
+
+def test_motors_by_rul_band_and_email_alerts(client: TestClient):
+    # Consulta agrupamento dos motores pelas 3 faixas de RUL
+    status_resp = client.get("/motors/status")
+    assert status_resp.status_code == 200
+    status_data = status_resp.json()
+    assert "total_motors" in status_data
+    assert "counts_by_band" in status_data
+    assert set(status_data["counts_by_band"].keys()) == {"CRÍTICO", "ALERTA", "NORMAL"}
+    assert isinstance(status_data["motors"], list)
+
+    # Consulta endpoint de alertas de e-mail
+    alerts_resp = client.get("/alerts")
+    assert alerts_resp.status_code == 200
+    assert isinstance(alerts_resp.json(), list)
 
 
 def test_predict_negative_physical_values_rejected(client: TestClient):

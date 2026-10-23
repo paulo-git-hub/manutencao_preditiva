@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from src.routers import health, predict
-from src.database.connection import engine, Base
+from src.database.connection import engine, Base, ensure_schema_columns
 from src.services.ml_service import load_model_on_startup, clear_model_cache
 
 
@@ -15,6 +15,7 @@ async def lifespan(app: FastAPI):
     uma única vez na memória RAM durante o startup do servidor ASGI.
     """
     Base.metadata.create_all(bind=engine)
+    ensure_schema_columns()
     model = load_model_on_startup()
     app.state.model = model
     yield
@@ -47,13 +48,15 @@ def root():
         "message": "Bem-vindo à API de Manutenção Industrial Preditiva",
         "simulator_url": "/simulador",
         "docs_url": "/docs",
-        "health_check": "/health"
+        "health_check": "/health",
+        "motors_by_status_url": "/motors/status",
+        "email_alerts_url": "/alerts"
     }
 
 
 @app.get("/simulador", response_class=HTMLResponse, tags=["UI"])
 def simulator_ui():
-    """Interface Web interativa conectada em tempo real ao modelo ML e ao banco SQLite, incluindo gráfico de projeção temporal."""
+    """Interface Web interativa conectada em tempo real ao modelo ML, alertas de e-mail e filtro das 3 faixas de RUL."""
     return """
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -61,7 +64,6 @@ def simulator_ui():
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Simulador Web — Manutenção Preditiva (SENAI)</title>
-  <!-- Injeção do Chart.js para o gráfico de projeção -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root {
@@ -84,7 +86,7 @@ def simulator_ui():
       color: var(--text);
       padding: 24px;
     }
-    .container { max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+    .container { max-width: 1240px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
     .header {
       background: var(--card);
       border: 1px solid var(--border);
@@ -123,7 +125,7 @@ def simulator_ui():
     .field { display: flex; flex-direction: column; gap: 6px; }
     .field label { font-size: 12px; color: var(--muted); display: flex; justify-content: space-between; }
     .field label strong { color: var(--text); }
-    input[type="number"], input[type="text"], select {
+    input[type="number"], input[type="text"], input[type="email"], select {
       padding: 9px 12px;
       border-radius: 8px;
       border: 1px solid var(--border);
@@ -159,18 +161,53 @@ def simulator_ui():
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 14px;
-      padding: 22px;
+      padding: 20px;
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 12px;
     }
-    .rul-number { font-size: 40px; font-weight: 800; }
+    .rul-number { font-size: 38px; font-weight: 800; }
     .badge {
       padding: 5px 14px;
       border-radius: 99px;
       font-size: 12px;
       font-weight: 800;
       width: fit-content;
+    }
+    .filter-tabs { display: flex; gap: 10px; flex-wrap: wrap; }
+    .tab-btn {
+      padding: 8px 14px;
+      border-radius: 9px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--muted);
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .tab-btn.active {
+      border-color: var(--primary);
+      color: var(--text);
+      background: rgba(56, 189, 248, 0.14);
+    }
+    .count-pill {
+      padding: 2px 8px;
+      border-radius: 99px;
+      font-size: 11px;
+      background: rgba(255,255,255,0.08);
+    }
+    .alert-banner {
+      display: none;
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--warning);
+      background: rgba(245, 158, 11, 0.12);
+      font-size: 12.5px;
+      color: var(--text);
+      line-height: 1.45;
     }
     table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
     th, td { padding: 9px 10px; text-align: left; border-bottom: 1px solid var(--border); }
@@ -181,11 +218,13 @@ def simulator_ui():
   <div class="container">
     <div class="header">
       <div>
-        <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:var(--primary); font-weight:700;">Painel de Simulação em Tempo Real</div>
+        <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:var(--primary); font-weight:700;">Painel de Simulação & Monitoramento PCM em Tempo Real</div>
         <h1>🛠️ Simulador de Vida Útil Restante (RUL) — Motores Industriais</h1>
       </div>
-      <div style="display:flex; gap:10px;">
-        <a href="/docs" target="_blank">📄 Abrir Swagger (/docs)</a>
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <a href="/motors/status" target="_blank">📊 JSON Motores (/motors/status)</a>
+        <a href="/alerts" target="_blank">📧 JSON Alertas (/alerts)</a>
+        <a href="/docs" target="_blank">📄 Swagger (/docs)</a>
         <a href="/health" target="_blank">🩺 Status (/health)</a>
       </div>
     </div>
@@ -195,12 +234,12 @@ def simulator_ui():
       <div class="card">
         <h2>1. Parâmetros de Telemetria e Operação</h2>
         <div class="presets">
-          <button type="button" class="preset-btn" onclick="applyPreset(1, 168, 445, 98, 38, 5, 0, 4)">🟢 Cenário Saudável</button>
-          <button type="button" class="preset-btn" onclick="applyPreset(12, 182, 410, 114, 48, 14, 2, 28)">🟡 Cenário de Desgaste</button>
-          <button type="button" class="preset-btn" onclick="applyPreset(25, 198, 360, 128, 62, 19, 5, 55)">🔴 Cenário Severo</button>
+          <button type="button" class="preset-btn" onclick="applyPreset(1, 168, 445, 98, 38, 5, 0, 4)">🟢 Cenário NORMAL (>168h)</button>
+          <button type="button" class="preset-btn" onclick="applyPreset(12, 185, 405, 118, 50, 15, 3, 35)">🟡 Cenário ALERTA (48h–168h)</button>
+          <button type="button" class="preset-btn" onclick="applyPreset(25, 215, 310, 145, 72, 20, 8, 75)">🔴 Cenário CRÍTICO (≤48h)</button>
         </div>
 
-        <form id="simForm" onsubmit="runPrediction(event)" style="display:flex; flex-direction:column; gap:16px;">
+        <form id="simForm" onsubmit="runPrediction(event)" style="display:flex; flex-direction:column; gap:14px;">
           <div class="form-grid">
             <div class="field">
               <label>ID do Motor (machine_id)</label>
@@ -253,9 +292,15 @@ def simulator_ui():
             </div>
           </div>
 
-          <div class="field">
-            <label>Idempotency-Key (opcional — evita duplicação em retentativas)</label>
-            <input id="idempotency_key" type="text" placeholder="Deixe em branco para gerar novo log a cada clique" />
+          <div class="form-grid">
+            <div class="field">
+              <label>E-mail para Alerta Automático (CRÍTICO / ALERTA)</label>
+              <input id="alert_email" type="email" value="" placeholder="Deixe vazio para usar ALERT_EMAIL_TO do .env" />
+            </div>
+            <div class="field">
+              <label>Idempotency-Key (opcional)</label>
+              <input id="idempotency_key" type="text" placeholder="Ex: sensor-evt-001" />
+            </div>
           </div>
 
           <button type="submit" class="btn-submit">⚡ Executar Predição no Modelo (POST /predict)</button>
@@ -275,40 +320,91 @@ def simulator_ui():
           <p id="recDisplay" style="font-size:13.5px; color:var(--muted); line-height:1.5;">
             Clique em "Executar Predição no Modelo" para projetar as datas de falha baseadas no modelo <code>models/model.joblib</code>.
           </p>
+          <div id="emailAlertBanner" class="alert-banner"></div>
         </div>
 
         <!-- Container do Gráfico -->
-        <div class="result-box" style="margin-top: 4px; padding: 16px;">
-          <h3 style="font-size:13px; color:var(--muted); margin-bottom: 12px; font-weight: 500;">Projeção de Degradação (Hoje até Falha Estimada)</h3>
-          <div style="position: relative; height: 180px; width: 100%;">
+        <div class="result-box" style="padding: 16px;">
+          <h3 style="font-size:13px; color:var(--muted); margin-bottom: 10px; font-weight: 500;">Projeção de Degradação (Hoje até Falha Estimada)</h3>
+          <div style="position: relative; height: 185px; width: 100%;">
             <canvas id="rulChart"></canvas>
           </div>
         </div>
+      </div>
+    </div>
 
-        <h2 style="margin-top: 8px;">3. Últimas Predições Salvas no SQLite</h2>
-        <div style="overflow-x:auto;">
-          <table>
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Motor</th>
-                <th>Vibração</th>
-                <th>Erros 24h</th>
-                <th>RUL (h)</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody id="historyBody">
-              <tr><td colspan="6" style="color:var(--muted);">Carregando histórico...</td></tr>
-            </tbody>
-          </table>
+    <!-- Seção 3: Listagem de Motores por Status nas 3 Faixas de RUL -->
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; border-bottom: 1px solid var(--border); padding-bottom: 12px;">
+        <div>
+          <h2 style="border:none; padding:0;">3. Monitoramento de Motores pelas 3 Faixas de RUL (Último Estado por Motor)</h2>
+          <p style="font-size:12px; color:var(--muted); margin-top:4px;">Filtre os ativos industriais monitorados de acordo com a criticidade da Vida Útil Restante (<code>GET /motors/status</code>)</p>
         </div>
+        <div class="filter-tabs">
+          <button type="button" class="tab-btn active" id="tab-ALL" onclick="filterMotorsByBand('')">
+            Todos <span class="count-pill" id="cnt-ALL">0</span>
+          </button>
+          <button type="button" class="tab-btn" id="tab-CRÍTICO" onclick="filterMotorsByBand('CRÍTICO')" style="color:var(--danger);">
+            🔴 CRÍTICO (≤ 48h) <span class="count-pill" id="cnt-CRÍTICO">0</span>
+          </button>
+          <button type="button" class="tab-btn" id="tab-ALERTA" onclick="filterMotorsByBand('ALERTA')" style="color:var(--warning);">
+            🟡 ALERTA (48h – 168h) <span class="count-pill" id="cnt-ALERTA">0</span>
+          </button>
+          <button type="button" class="tab-btn" id="tab-NORMAL" onclick="filterMotorsByBand('NORMAL')" style="color:var(--success);">
+            🟢 NORMAL (> 168h) <span class="count-pill" id="cnt-NORMAL">0</span>
+          </button>
+        </div>
+      </div>
+
+      <div style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>Motor</th>
+              <th>Família</th>
+              <th>Tensão (V)</th>
+              <th>Rotação (RPM)</th>
+              <th>Vibração (m/s²)</th>
+              <th>Erros 24h</th>
+              <th>RUL Estimada</th>
+              <th>Faixa de Status</th>
+              <th>Recomendação Técnica</th>
+            </tr>
+          </thead>
+          <tbody id="motorsBandBody">
+            <tr><td colspan="9" style="color:var(--muted);">Carregando motores por faixa de RUL...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Seção 4: Histórico de Alertas de E-mail Disparados -->
+    <div class="card">
+      <h2>4. Central de Alertas de E-mail Disparados Automaticamente (Status ALERTA e CRÍTICO)</h2>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>ID Alerta</th>
+              <th>Motor / Família</th>
+              <th>Status</th>
+              <th>RUL (h)</th>
+              <th>Destinatário</th>
+              <th>Assunto do E-mail</th>
+              <th>Modo de Envio</th>
+            </tr>
+          </thead>
+          <tbody id="alertsBody">
+            <tr><td colspan="7" style="color:var(--muted);">Nenhum alerta disparado ainda.</td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
 
   <script>
     let rulChartInstance = null;
+    let currentBandFilter = '';
 
     function applyPreset(mId, volt, rotate, pressure, vibration, age, err, maint) {
       document.getElementById('machine_id').value = mId;
@@ -321,23 +417,75 @@ def simulator_ui():
       document.getElementById('days_since_maint').value = maint; document.getElementById('maint_lbl').textContent = maint;
     }
 
-    async function loadHistory() {
+    function statusColor(st) {
+      if (st === 'CRÍTICO') return 'var(--danger)';
+      if (st === 'ALERTA') return 'var(--warning)';
+      return 'var(--success)';
+    }
+
+    async function filterMotorsByBand(band) {
+      currentBandFilter = band;
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      const activeId = band ? `tab-${band}` : 'tab-ALL';
+      const activeEl = document.getElementById(activeId);
+      if (activeEl) activeEl.classList.add('active');
+      await loadMotorsByBand();
+    }
+
+    async function loadMotorsByBand() {
       try {
-        const res = await fetch('/predictions?limit=4');
-        const logs = await res.json();
-        const tbody = document.getElementById('historyBody');
-        if (!logs.length) {
-          tbody.innerHTML = '<tr><td colspan="6" style="color:var(--muted);">Nenhum registro ainda.</td></tr>';
+        const url = currentBandFilter
+          ? `/motors/status?band=${encodeURIComponent(currentBandFilter)}`
+          : '/motors/status';
+        const res = await fetch(url);
+        const data = await res.json();
+
+        document.getElementById('cnt-ALL').textContent = data.total_motors || 0;
+        document.getElementById('cnt-CRÍTICO').textContent = (data.counts_by_band && data.counts_by_band['CRÍTICO']) || 0;
+        document.getElementById('cnt-ALERTA').textContent = (data.counts_by_band && data.counts_by_band['ALERTA']) || 0;
+        document.getElementById('cnt-NORMAL').textContent = (data.counts_by_band && data.counts_by_band['NORMAL']) || 0;
+
+        const tbody = document.getElementById('motorsBandBody');
+        if (!data.motors || !data.motors.length) {
+          tbody.innerHTML = '<tr><td colspan="9" style="color:var(--muted);">Nenhum motor encontrado nesta faixa de RUL.</td></tr>';
           return;
         }
-        tbody.innerHTML = logs.map(l => `
+        tbody.innerHTML = data.motors.map(m => `
           <tr>
-            <td>#${l.id}</td>
-            <td>Motor ${l.machine_id}</td>
-            <td>${l.vibration} m/s²</td>
-            <td>${l.recent_errors}</td>
-            <td><strong>${l.predicted_rul_hours.toFixed(1)}h</strong></td>
-            <td>${l.status}</td>
+            <td><strong>Motor #${m.machine_id}</strong></td>
+            <td><code>${m.model_type || 'model1'}</code></td>
+            <td>${m.volt.toFixed(1)} V</td>
+            <td>${m.rotate.toFixed(0)} RPM</td>
+            <td>${m.vibration.toFixed(1)} m/s²</td>
+            <td>${m.recent_errors}</td>
+            <td><strong>${m.predicted_rul_hours.toFixed(1)}h</strong></td>
+            <td><span style="color:${statusColor(m.status)}; font-weight:800;">${m.status}</span></td>
+            <td style="color:var(--muted);">${m.recommendation || ''}</td>
+          </tr>
+        `).join('');
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    async function loadEmailAlerts() {
+      try {
+        const res = await fetch('/alerts?limit=10');
+        const alerts = await res.json();
+        const tbody = document.getElementById('alertsBody');
+        if (!alerts.length) {
+          tbody.innerHTML = '<tr><td colspan="7" style="color:var(--muted);">Nenhum alerta de e-mail disparado ainda. Simule um cenário ALERTA ou CRÍTICO para testar.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = alerts.map(a => `
+          <tr>
+            <td>#${a.id}</td>
+            <td>Motor #${a.machine_id} (<code>${a.model_type || 'model1'}</code>)</td>
+            <td><span style="color:${statusColor(a.status)}; font-weight:800;">${a.status}</span></td>
+            <td><strong>${a.predicted_rul_hours.toFixed(1)}h</strong></td>
+            <td>${a.recipient}</td>
+            <td>${a.subject}</td>
+            <td><code>${a.delivery_mode}</code></td>
           </tr>
         `).join('');
       } catch (e) {
@@ -425,6 +573,7 @@ def simulator_ui():
 
     async function runPrediction(e) {
       e.preventDefault();
+      const alertEmail = document.getElementById('alert_email').value.trim();
       const payload = {
         machine_id: parseInt(document.getElementById('machine_id').value, 10),
         model_type: document.getElementById('model_type').value,
@@ -434,7 +583,8 @@ def simulator_ui():
         vibration: parseFloat(document.getElementById('vibration').value),
         age: parseFloat(document.getElementById('age').value),
         recent_errors: parseInt(document.getElementById('recent_errors').value, 10),
-        days_since_maint: parseFloat(document.getElementById('days_since_maint').value)
+        days_since_maint: parseFloat(document.getElementById('days_since_maint').value),
+        alert_email: alertEmail || null
       };
 
       const headers = { 'Content-Type': 'application/json' };
@@ -464,13 +614,24 @@ def simulator_ui():
         badge.style.color = 'var(--success)';
       }
 
+      const alertBanner = document.getElementById('emailAlertBanner');
+      if (data.email_alert_triggered) {
+        alertBanner.style.display = 'block';
+        alertBanner.style.borderColor = data.status === 'CRÍTICO' ? 'var(--danger)' : 'var(--warning)';
+        alertBanner.innerHTML = `📧 <strong>Alerta Automático de E-mail Disparado!</strong> Destinatário: <code>${data.email_recipient || alertEmail}</code> | Modo: <code>${data.email_delivery_mode}</code>`;
+      } else {
+        alertBanner.style.display = 'none';
+      }
+
       const shiftH = parseFloat(document.getElementById("work_shift").value) || 24;
       drawChart(data.predicted_rul_hours, data.status, shiftH);
 
-      loadHistory();
+      await loadMotorsByBand();
+      await loadEmailAlerts();
     }
 
-    loadHistory();
+    loadMotorsByBand();
+    loadEmailAlerts();
   </script>
 </body>
 </html>
