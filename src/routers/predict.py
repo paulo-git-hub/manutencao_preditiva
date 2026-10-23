@@ -55,7 +55,8 @@ def predict(
                     status=existing_log.status,
                     recommendation=existing_log.recommendation or "",
                     email_alert_triggered=existing_alert is not None,
-                    email_delivery_mode=existing_alert.delivery_mode if existing_alert else None
+                    email_delivery_mode=existing_alert.delivery_mode if existing_alert else None,
+                    email_recipient=existing_alert.recipient if existing_alert else None
                 )
 
         # 2. Executa a inferência matemática na camada de serviço (modelo em RAM)
@@ -114,7 +115,8 @@ def predict(
             status=prediction_result["status"],
             recommendation=prediction_result["recommendation"],
             email_alert_triggered=alert_entry is not None,
-            email_delivery_mode=alert_entry.delivery_mode if alert_entry else None
+            email_delivery_mode=alert_entry.delivery_mode if alert_entry else None,
+            email_recipient=alert_entry.recipient if alert_entry else None
         )
 
     except ValueError as ve:

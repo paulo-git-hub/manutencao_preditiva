@@ -11,7 +11,7 @@
 
 Na indústria de manufatura contínua, paradas não planejadas de motores e ativos rotativos geram severos prejuízos operacionais, enquanto manutenções preventivas baseadas apenas em calendário trocam componentes ainda saudáveis.
 
-Este projeto resolve esse problema de negócio disponibilizando um **pipeline preditivo de Machine Learning em produção via API RESTful (FastAPI)**: a partir de leituras de sensores em tempo real (tensão elétrica, rotação, pressão e vibração), somadas à idade do ativo, família construtiva do motor, histórico de erros nas últimas 24h e dias desde a última manutenção, o sistema estima quantas **horas de vida útil restam até a próxima falha (RUL)**, classifica o risco operacional (**NORMAL**, **ALERTA** ou **CRÍTICO**), recomenda a ação de engenharia adequada e registra os logs de auditoria em banco **SQLite** com garantia de **Idempotência (`Idempotency-Key`)**.
+Este projeto resolve esse problema de negócio disponibilizando um **pipeline preditivo de Machine Learning em produção via API RESTful (FastAPI)**: a partir de leituras de sensores em tempo real (tensão elétrica, rotação, pressão e vibração), somadas à idade do ativo, família construtiva do motor, histórico de erros nas últimas 24h e dias desde a última manutenção, o sistema estima quantas **horas de vida útil restam até a próxima falha (RUL)**, classifica o risco operacional (**NORMAL**, **ALERTA** ou **CRÍTICO**), recomenda a ação de engenharia adequada, dispara **alertas automáticos por e-mail** para os estados **ALERTA** e **CRÍTICO**, e registra os logs de auditoria em banco **SQLite** com garantia de **Idempotência (`Idempotency-Key`)**.
 
 ---
 
@@ -32,7 +32,7 @@ Este projeto resolve esse problema de negócio disponibilizando um **pipeline pr
   * **Variáveis Numéricas (`volt`, `rotate`, `pressure`, `vibration`, `age`, `recent_errors`, `days_since_maint`):** Imputação de nulos pela mediana (`SimpleImputer(strategy="median")`) + padronização z-score (`StandardScaler()`).
   * **Variáveis Categóricas (`model_type`):** Imputação pela moda (`SimpleImputer(strategy="most_frequent")`) + codificação binária (`OneHotEncoder(handle_unknown="ignore")`).
   * **Estimador:** `RandomForestRegressor(n_estimators=120, max_depth=14, random_state=42)`.
-* **Serialização e Rastreamento:** Pipeline completo exportado em [`models/model.joblib`](file:///d:/ANTIGRAVITY/PROJETOS/manutencao_industrial_preditiva/models/model.joblib), métricas salvas em [`models/metrics_report.json`](file:///d:/ANTIGRAVITY/PROJETOS/manutencao_industrial_preditiva/models/metrics_report.json) e experimento versionado via **MLflow**.
+* **Serialização e Rastreamento:** Pipeline completo exportado em [`models/model.joblib`](models/model.joblib), métricas salvas em [`models/metrics_report.json`](models/metrics_report.json) e experimento versionado via **MLflow**.
 
 ### 📈 Relatório de Métricas Alcançadas
 
@@ -54,7 +54,7 @@ Este projeto resolve esse problema de negócio disponibilizando um **pipeline pr
 | **Scikit-Learn** | `>=1.3.0` | Construção do `Pipeline`, `ColumnTransformer` e `RandomForestRegressor` |
 | **Pandas & NumPy** | `>=2.0.0` / `>=1.24.0` | Engenharia de atributos vetorizada (`merge_asof`) e manipulação matricial |
 | **Joblib** | `>=1.3.0` | Serialização e carregamento em memória RAM do artefato `models/model.joblib` |
-| **SQLAlchemy (SQLite)** | `>=2.0.0` | Persistência relacional de logs de inferência e controle de idempotência |
+| **SQLAlchemy (SQLite)** | `>=2.0.0` | Persistência relacional de logs de inferência, alertas e controle de idempotência |
 | **MLflow** | `>=2.5.0` | Rastreamento de hiperparâmetros, métricas e registro do modelo |
 | **Matplotlib & Seaborn** | `>=3.7.0` / `>=0.12.0` | Visualização gráfica e matriz de correlação no Notebook de EDA |
 | **Pytest & HTTPX** | `>=7.4.0` / `>=0.24.0` | Suíte de testes automatizados de integração dos endpoints e validações HTTP |
@@ -117,10 +117,11 @@ pytest -v tests/
 │-- /src                       # Código-fonte modularizado da API FastAPI
 │   │-- /database              # Conexão SQLite e ORM SQLAlchemy (connection.py, models.py)
 │   │-- /schemas               # Contratos Pydantic de entrada e saída (prediction.py)
-│   │-- /services              # Pipeline ML, cache em RAM e inferência desacoplada (ml_service.py)
+│   │-- /services              # Pipeline ML, cache em RAM e alertas SMTP (ml_service.py, email_service.py)
 │   │-- /routers               # Rotas modulares APIRouter (health.py, predict.py)
 │   └── main.py                # Ponto de entrada e gerenciamento de ciclo de vida (@asynccontextmanager lifespan)
 │-- /tests                     # Testes automatizados (test_api.py)
+│-- apresentacao.html          # Slides interativos guiados para o vídeo (Item 5.4)
 │-- Dockerfile                 # Empacotamento em container
 │-- requirements.txt           # Dependências com versões
 └── README.md                  # Documentação técnica
@@ -131,6 +132,8 @@ pytest -v tests/
 * **Documentação Alternativa ReDoc (`/redoc`):** [http://127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc)
 * **Painel Simulador Web com Gráfico de Degradação (`/simulador`):** [http://127.0.0.1:8000/simulador](http://127.0.0.1:8000/simulador)
 * **Monitoramento de Saúde e Modelo em RAM (`/health`):** [http://127.0.0.1:8000/health](http://127.0.0.1:8000/health)
+* **Monitoramento de Motores pelas 3 Faixas de RUL (`/motors/status`):** [http://127.0.0.1:8000/motors/status](http://127.0.0.1:8000/motors/status)
+* **Histórico de Alertas Automáticos de E-mail (`/alerts`):** [http://127.0.0.1:8000/alerts](http://127.0.0.1:8000/alerts)
 
 ### Exemplos de Chamadas aos Endpoints
 
@@ -155,7 +158,8 @@ pytest -v tests/
   "vibration": 46.8,
   "age": 14.0,
   "recent_errors": 2,
-  "days_since_maint": 25.0
+  "days_since_maint": 25.0,
+  "alert_email": "manutencao.pcm@industria-senai.com.br"
 }
 ```
 
@@ -165,7 +169,10 @@ pytest -v tests/
   "machine_id": 1,
   "predicted_rul_hours": 142.85,
   "status": "ALERTA",
-  "recommendation": "Agendar inspeção e lubrificação/troca de peças no próximo ciclo de manutenção semanal."
+  "recommendation": "Agendar inspeção e lubrificação/troca de peças no próximo ciclo de manutenção semanal.",
+  "email_alert_triggered": true,
+  "email_delivery_mode": "SIMULATED_INBOX",
+  "email_recipient": "manutencao.pcm@industria-senai.com.br"
 }
 ```
 

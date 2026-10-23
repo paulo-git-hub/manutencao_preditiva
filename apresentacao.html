@@ -445,12 +445,12 @@
               <tr>
                 <td><span class="badge b-crit">CRÍTICO</span></td>
                 <td><code>&le; 48 horas</code></td>
-                <td>Parada programada emergencial em até 48h.</td>
+                <td>Parada programada emergencial em até 48h + Alerta E-mail.</td>
               </tr>
               <tr>
                 <td><span class="badge b-warn">ALERTA</span></td>
                 <td><code>48h a 168h</code></td>
-                <td>Agendar inspeção e lubrificação no ciclo semanal.</td>
+                <td>Agendar inspeção no ciclo semanal + Alerta E-mail.</td>
               </tr>
               <tr>
                 <td><span class="badge b-norm">NORMAL</span></td>
@@ -465,7 +465,7 @@
           <h3>🖥️ Roteiro Rápido de Demonstração ao Vivo</h3>
           <ul>
             <li><strong>1. Abrir <code>GET /health</code>:</strong> Mostrar o JSON retornando <code>"status": "online"</code> e <code>"model_loaded": true</code> (comprovando o modelo carregado em RAM).</li>
-            <li><strong>2. Abrir <code>GET /simulador</code>:</strong> Testar os botões de <em>Cenário Saudável</em> e <em>Cenário Severo</em>, mostrar o gráfico de degradação ajustado por turno (24h, 16h, 8h) e a tabela SQLite.</li>
+            <li><strong>2. Abrir <code>GET /simulador</code>:</strong> Testar os botões de <em>Cenário NORMAL</em>, <em>ALERTA</em> e <em>CRÍTICO</em>, mostrar o gráfico de degradação ajustado por turno (24h, 16h, 8h), o filtro por faixa de RUL e os alertas de e-mail.</li>
             <li><strong>3. Abrir Swagger (<code>/docs</code>):</strong> Executar <code>POST /predict</code> com dados válidos (<code>200 OK</code>) e depois com <code>"volt": -170</code> para demonstrar o bloqueio automático <code>422 Unprocessable Entity</code> pelo Pydantic.</li>
           </ul>
         </div>
@@ -505,7 +505,7 @@ python src/services/ml_service.py
 <span class="cmt"># 4. Iniciar servidor ASGI Uvicorn</span>
 python -m uvicorn src.main:app --host 127.0.0.1 --port 8000 --reload
 
-<span class="cmt"># 5. Executar a suíte de 8 testes automatizados</span>
+<span class="cmt"># 5. Executar a suíte de 9 testes automatizados</span>
 pytest -v tests/</pre>
         </div>
 
@@ -554,10 +554,10 @@ pytest&gt;=7.4.0 &amp; httpx     <span class="cmt"># Testes de Integração da A
 ├── /src
 │   ├── /database          <span class="cmt"># SQLite + ORM SQLAlchemy (models.py)</span>
 │   ├── /schemas           <span class="cmt"># Contratos Pydantic V2 (prediction.py)</span>
-│   ├── /services          <span class="cmt"># Pipeline ML + Inferência (ml_service.py)</span>
-│   ├── /routers           <span class="cmt"># APIRouter (/health e /predict)</span>
+│   ├── /services          <span class="cmt"># Pipeline ML + Alertas SMTP (ml_service, email_service)</span>
+│   ├── /routers           <span class="cmt"># APIRouter (/health, /predict, /motors/status, /alerts)</span>
 │   └── main.py            <span class="cmt"># Lifespan (@asynccontextmanager) + UI</span>
-├── /tests                 <span class="cmt"># 8 testes automatizados (test_api.py)</span>
+├── /tests                 <span class="cmt"># 9 testes automatizados (test_api.py)</span>
 ├── requirements.txt       <span class="cmt"># Reprodutibilidade do ambiente</span>
 └── README.md              <span class="cmt"># Documentação com os 6 itens do edital</span></pre>
         </div>
@@ -566,9 +566,9 @@ pytest&gt;=7.4.0 &amp; httpx     <span class="cmt"># Testes de Integração da A
           <h3>📋 Planejamento em 5 Etapas Sequenciais</h3>
           <ul>
             <li><strong>Etapa 1 (Dados &amp; ML Offline):</strong> Unificação das 5 tabelas Azure (`telemetry`, `machines`, `failures`, `errors`, `maint`), divisão Treino (70%) / Validação (15%) / Teste (15%) e exportação do `Pipeline` em `models/model.joblib`.</li>
-            <li><strong>Etapa 2 (Persistência &amp; Contratos):</strong> Criação da tabela `prediction_logs` no SQLite e definição dos schemas Pydantic com restrições físicas estritas (`Field`).</li>
+            <li><strong>Etapa 2 (Persistência &amp; Contratos):</strong> Criação das tabelas `prediction_logs` e `email_alert_logs` no SQLite e definição dos schemas Pydantic com restrições físicas estritas (`Field`).</li>
             <li><strong>Etapa 3 (Ciclo de Vida Lifespan):</strong> Carregamento único do artefato em memória RAM no startup da API.</li>
-            <li><strong>Etapa 4 (Rotas &amp; Idempotência):</strong> Construção dos endpoints `/health`, `/predict` e `/v1/predict` com tratamento semântico de exceções HTTP (`200`, `400`, `422`, `500`, `503`).</li>
+            <li><strong>Etapa 4 (Rotas &amp; Idempotência):</strong> Construção dos endpoints `/health`, `/predict`, `/v1/predict`, `/motors/status` e `/alerts` com tratamento semântico de exceções HTTP (`200`, `400`, `422`, `500`, `503`).</li>
             <li><strong>Etapa 5 (Qualidade &amp; Documentação):</strong> Testes automatizados com Pytest, Simulador Web com Chart.js e documentação no `README.md`.</li>
           </ul>
         </div>
@@ -588,7 +588,7 @@ pytest&gt;=7.4.0 &amp; httpx     <span class="cmt"># Testes de Integração da A
       <div class="teleprompter">
         <div class="teleprompter-title">🎙️ Roteiro sugerido para falar neste slide (4:15 – 5:30)</div>
         <p>
-          "Para o versionamento no Git e GitHub, apliquei o fluxo <strong>GitFlow</strong>. A partir da branch <code>main</code>, criei a branch integradora <code>develop</code> e, a partir dela, abri <strong>6 feature branches específicas</strong> para cada etapa do projeto. Todos os commits foram feitos com mensagens concisas no verbo imperativo — como <em>'implementa pipeline...'</em> ou <em>'define esquemas...'</em> — e todas as branches foram preservadas sem exclusão após o merge na <code>develop</code> e entrega final na <code>main</code>."
+          "Para o versionamento no Git e GitHub, apliquei o fluxo <strong>GitFlow</strong>. A partir da branch <code>main</code>, criei a branch integradora <code>develop</code> e, a partir dela, abri <strong>7 feature branches específicas</strong> para cada etapa do projeto. Todos os commits foram feitos com mensagens concisas no verbo imperativo — como <em>'implementa pipeline...'</em> ou <em>'define esquemas...'</em> — e todas as branches foram preservadas sem exclusão após o merge na <code>develop</code> e entrega final na <code>main</code>."
         </p>
       </div>
 
@@ -635,15 +635,26 @@ pytest&gt;=7.4.0 &amp; httpx     <span class="cmt"># Testes de Integração da A
                 <td><span class="badge b-branch">feature/documentacao-readme</span></td>
                 <td>Documentação completa no <code>README.md</code> (item 5.2) e guia de apresentação.</td>
               </tr>
+              <tr>
+                <td><span class="badge b-branch">feature/alertas-email-status-motores</span></td>
+                <td>Serviço de alertas por e-mail SMTP e monitoramento de motores pelas 3 faixas de RUL.</td>
+              </tr>
             </tbody>
           </table>
         </div>
 
         <div class="card">
           <h3>🌳 Histórico Real do Repositório (git log --graph)</h3>
-          <pre>*   <span class="kw">main</span>: integra branch develop na main para entrega final
+          <pre>*   <span class="kw">main</span>: integra branch develop na main com alertas e filtro de motores
 |\  
-| *   <span class="kw">develop</span>: integra feature/documentacao-readme na develop
+| *   <span class="kw">develop</span>: integra feature/alertas-email-status-motores na develop
+| |\  
+| | * implementa servico de alertas por email e filtro por faixa de rul
+| |/  
+| *   integra atualizacao da apresentacao na develop
+| |\  
+| | * <span class="str">7329f07</span> atualiza slides de apresentacao com roteiro das 6 perguntas do edital
+| *   integra feature/documentacao-readme na develop
 | |\  
 | | * <span class="str">f459fe2</span> adiciona documentacao tecnica completa no readme e apresentacao
 | |/  
@@ -666,10 +677,6 @@ pytest&gt;=7.4.0 &amp; httpx     <span class="cmt"># Testes de Integração da A
 | | * <span class="str">52744b1</span> implementa camada de persistencia sqlite com sqlalchemy
 | |/  
 | *   integra feature/fase1-pipeline-ml na develop
-| |\  
-| | * <span class="str">eb8a948</span> adiciona notebook explicativo de analise exploratoria e treinamento
-| | * <span class="str">e5f355e</span> implementa pipeline de pre-processamento e modelo random forest
-| | * <span class="str">df5eab3</span> adiciona base de dados publica azure predictive maintenance
 |/  
 * <span class="str">c557470</span> configura estrutura base do repositorio e dependencias</pre>
         </div>

@@ -295,7 +295,7 @@ def simulator_ui():
           <div class="form-grid">
             <div class="field">
               <label>E-mail para Alerta Automático (CRÍTICO / ALERTA)</label>
-              <input id="alert_email" type="email" value="manutencao.pcm@industria-senai.com.br" placeholder="manutencao.pcm@industria-senai.com.br" />
+              <input id="alert_email" type="email" value="" placeholder="Deixe vazio para usar ALERT_EMAIL_TO do .env" />
             </div>
             <div class="field">
               <label>Idempotency-Key (opcional)</label>
@@ -618,7 +618,7 @@ def simulator_ui():
       if (data.email_alert_triggered) {
         alertBanner.style.display = 'block';
         alertBanner.style.borderColor = data.status === 'CRÍTICO' ? 'var(--danger)' : 'var(--warning)';
-        alertBanner.innerHTML = `📧 <strong>Alerta Automático de E-mail Disparado!</strong> Destinatário: <code>${alertEmail || 'manutencao.pcm@industria-senai.com.br'}</code> | Modo: <code>${data.email_delivery_mode}</code>`;
+        alertBanner.innerHTML = `📧 <strong>Alerta Automático de E-mail Disparado!</strong> Destinatário: <code>${data.email_recipient || alertEmail}</code> | Modo: <code>${data.email_delivery_mode}</code>`;
       } else {
         alertBanner.style.display = 'none';
       }
