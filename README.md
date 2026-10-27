@@ -213,5 +213,5 @@ Como proposta de evolução arquitetural para operação industrial em larga esc
 
 ## 7. Links das Evidências (Entrega AVA)
 
-* 🎥 **Link do Vídeo de Apresentação (Google Drive — Modo Leitor):** `[INSIRA_AQUI_O_LINK_DO_SEU_VIDEO_NO_GOOGLE_DRIVE]`
-* 💻 **Link do Repositório Público no GitHub:** `[INSIRA_AQUI_O_LINK_DO_SEU_REPOSITORIO_NO_GITHUB]`
+* 🎥 **Link do Vídeo de Apresentação (Google Drive — Modo Leitor):** `[https://sites.google.com/sbsti.com/paulo-a-n-cordeiro]`
+* 💻 **Link do Repositório Público no GitHub:** `[https://github.com/paulo-git-hub/manutencao_preditiva.git]`
