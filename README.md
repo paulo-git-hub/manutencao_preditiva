@@ -111,20 +111,21 @@ pytest -v tests/
 
 ```text
 /manutencao_industrial_preditiva
-│-- /data                      # 5 datasets CSV da Azure Predictive Maintenance (caminhos relativos)
-│-- /models                    # Artefato binário serializado (model.joblib) e relatório (metrics_report.json)
-│-- /notebooks                 # Notebook estruturado por Fases (01_eda_and_training.ipynb)
-│-- /src                       # Código-fonte modularizado da API FastAPI
-│   │-- /database              # Conexão SQLite e ORM SQLAlchemy (connection.py, models.py)
-│   │-- /schemas               # Contratos Pydantic de entrada e saída (prediction.py)
-│   │-- /services              # Pipeline ML, cache em RAM e alertas SMTP (ml_service.py, email_service.py)
-│   │-- /routers               # Rotas modulares APIRouter (health.py, predict.py)
-│   └── main.py                # Ponto de entrada e gerenciamento de ciclo de vida (@asynccontextmanager lifespan)
-│-- /tests                     # Testes automatizados (test_api.py)
-│-- apresentacao.html          # Slides interativos guiados para o vídeo (Item 5.4)
-│-- Dockerfile                 # Empacotamento em container
-│-- requirements.txt           # Dependências com versões
-└── README.md                  # Documentação técnica
+│-- /data                         # 5 datasets CSV da Azure Predictive Maintenance (caminhos relativos)
+│-- /models                       # Artefato binário serializado (model.joblib) e relatório (metrics_report.json)
+│-- /notebooks                    # Notebook estruturado por Fases (01_eda_and_training.ipynb)
+│-- /src                          # Código-fonte modularizado da API FastAPI
+│   │-- /database                 # Conexão SQLite e ORM SQLAlchemy (connection.py, models.py)
+│   │-- /schemas                  # Contratos Pydantic de entrada e saída (prediction.py)
+│   │-- /services                 # Pipeline ML, cache em RAM e alertas SMTP (ml_service.py, email_service.py)
+│   │-- /routers                  # Rotas modulares APIRouter (health.py, predict.py)
+│   └── main.py                   # Ponto de entrada e gerenciamento de ciclo de vida (@asynccontextmanager lifespan)
+│-- /tests                        # Testes automatizados (test_api.py)
+│-- apresentacao.html             # Slides interativos guiados para o vídeo (Item 5.4)
+│-- producao-gcp-arquitetura.md   # Arquitetura de evolução e escala no Google Cloud Platform (GCP)
+│-- Dockerfile                    # Empacotamento em container
+│-- requirements.txt              # Dependências com versões
+└── README.md                     # Documentação técnica principal
 ```
 
 ### Links Interativos da Aplicação (Servidor Local)
@@ -184,7 +185,15 @@ Envio de tensão negativa (`"volt": -170.0`) ou texto inválido é bloqueado aut
 
 ---
 
-## 6. Links das Evidências (Entrega AVA)
+## 6. Evolução para Produção em Escala (Google Cloud Platform — GCP)
+
+Como proposta de evolução arquitetural para operação industrial em larga escala (*cloud-native*), o projeto conta com um documento complementar detalhando a transição para o ecossistema **Google Cloud (GCP)** — contemplando **Cloud Pub/Sub** e **Cloud Dataflow** para ingestão streaming IoT, **Cloud Run** para autoescalamento dos containers FastAPI, **Cloud SQL (PostgreSQL)** e **Memorystore (Redis)** para persistência e idempotência distribuída, **BigQuery** para analytics e **Vertex AI** para MLOps e monitoramento de *Data Drift*:
+
+* ☁️ **[📄 Consultar Documento Completo: Arquitetura de Produção em Escala no GCP (`producao-gcp-arquitetura.md`)](producao-gcp-arquitetura.md)**
+
+---
+
+## 7. Links das Evidências (Entrega AVA)
 
 * 🎥 **Link do Vídeo de Apresentação (Google Drive — Modo Leitor):** `[INSIRA_AQUI_O_LINK_DO_SEU_VIDEO_NO_GOOGLE_DRIVE]`
 * 💻 **Link do Repositório Público no GitHub:** `[INSIRA_AQUI_O_LINK_DO_SEU_REPOSITORIO_NO_GITHUB]`
