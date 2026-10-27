@@ -1,3 +1,4 @@
+import uuid
 from typing import List, Optional
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
 from sqlalchemy import func
@@ -24,7 +25,7 @@ def predict(
     idempotency_key: Optional[str] = Header(
         default=None,
         alias="Idempotency-Key",
-        description="Chave única opcional para garantir idempotência em retentativas de requisição"
+        description="Chave única opcional (UUID v4 gerado automaticamente caso omitida) para garantir idempotência"
     ),
     db: Session = Depends(get_db)
 ):
@@ -32,15 +33,18 @@ def predict(
     Fase 5 (Endpoint de Inferência):
     Recebe medições de sensores validadas via Pydantic, invoca a camada de serviço (`ml_service`)
     utilizando o modelo carregado em memória RAM (`lifespan`), estima a Vida Útil Restante (RUL)
-    em horas, registra auditoria no SQLite com suporte a `Idempotency-Key` e dispara alerta
-    automático por e-mail quando o status é `CRÍTICO` ou `ALERTA`.
+    em horas, registra auditoria no SQLite com suporte a `Idempotency-Key` (gerando UUID v4
+    automaticamente caso ausente) e dispara alerta automático por e-mail quando o status é
+    `CRÍTICO` ou `ALERTA`.
     """
     try:
+        effective_key = idempotency_key.strip() if idempotency_key and idempotency_key.strip() else str(uuid.uuid4())
+
         # 1. Verificação de Idempotência: se a chave já foi processada, retorna o registro existente
-        if idempotency_key:
+        if idempotency_key and idempotency_key.strip():
             existing_log = (
                 db.query(PredictionLog)
-                .filter(PredictionLog.idempotency_key == idempotency_key)
+                .filter(PredictionLog.idempotency_key == effective_key)
                 .first()
             )
             if existing_log:
@@ -50,6 +54,8 @@ def predict(
                     .first()
                 )
                 return PredictionResponse(
+                    record_id=existing_log.id,
+                    idempotency_key=existing_log.idempotency_key,
                     machine_id=existing_log.machine_id,
                     predicted_rul_hours=existing_log.predicted_rul_hours,
                     status=existing_log.status,
@@ -73,7 +79,7 @@ def predict(
 
         # 3. Registro de auditoria no banco de dados SQLite
         log_entry = PredictionLog(
-            idempotency_key=idempotency_key,
+            idempotency_key=effective_key,
             machine_id=request.machine_id,
             model_type=request.model_type,
             volt=request.volt,
@@ -110,6 +116,8 @@ def predict(
         )
 
         return PredictionResponse(
+            record_id=log_entry.id,
+            idempotency_key=log_entry.idempotency_key,
             machine_id=request.machine_id,
             predicted_rul_hours=prediction_result["predicted_rul_hours"],
             status=prediction_result["status"],

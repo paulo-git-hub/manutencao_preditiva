@@ -49,6 +49,7 @@ def root():
         "simulator_url": "/simulador",
         "docs_url": "/docs",
         "health_check": "/health",
+        "sqlite_records_url": "/predictions",
         "motors_by_status_url": "/motors/status",
         "email_alerts_url": "/alerts"
     }
@@ -56,7 +57,7 @@ def root():
 
 @app.get("/simulador", response_class=HTMLResponse, tags=["UI"])
 def simulator_ui():
-    """Interface Web interativa conectada em tempo real ao modelo ML, alertas de e-mail e filtro das 3 faixas de RUL."""
+    """Interface Web interativa conectada em tempo real ao modelo ML, registros SQLite, alertas de e-mail e filtro das 3 faixas de RUL."""
     return """
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -86,7 +87,7 @@ def simulator_ui():
       color: var(--text);
       padding: 24px;
     }
-    .container { max-width: 1240px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+    .container { max-width: 1280px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
     .header {
       background: var(--card);
       border: 1px solid var(--border);
@@ -123,7 +124,7 @@ def simulator_ui():
     .card h2 { font-size: 17px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
     .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
     .field { display: flex; flex-direction: column; gap: 6px; }
-    .field label { font-size: 12px; color: var(--muted); display: flex; justify-content: space-between; }
+    .field label { font-size: 12px; color: var(--muted); display: flex; justify-content: space-between; align-items: center; }
     .field label strong { color: var(--text); }
     input[type="number"], input[type="text"], input[type="email"], select {
       padding: 9px 12px;
@@ -157,6 +158,17 @@ def simulator_ui():
       cursor: pointer;
     }
     .preset-btn:hover { color: var(--text); border-color: var(--primary); }
+    .mini-btn {
+      padding: 3px 8px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--primary);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .mini-btn:hover { border-color: var(--primary); background: rgba(56, 189, 248, 0.12); }
     .result-box {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -174,7 +186,7 @@ def simulator_ui():
       font-weight: 800;
       width: fit-content;
     }
-    .filter-tabs { display: flex; gap: 10px; flex-wrap: wrap; }
+    .filter-tabs { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
     .tab-btn {
       padding: 8px 14px;
       border-radius: 9px;
@@ -201,7 +213,7 @@ def simulator_ui():
     }
     .alert-banner {
       display: none;
-      padding: 12px 14px;
+      padding: 10px 14px;
       border-radius: 10px;
       border: 1px solid var(--warning);
       background: rgba(245, 158, 11, 0.12);
@@ -209,9 +221,27 @@ def simulator_ui():
       color: var(--text);
       line-height: 1.45;
     }
+    .sqlite-meta-banner {
+      display: none;
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: rgba(56, 189, 248, 0.08);
+      font-size: 12px;
+      color: var(--text);
+      line-height: 1.45;
+    }
     table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
     th, td { padding: 9px 10px; text-align: left; border-bottom: 1px solid var(--border); }
     th { color: var(--muted); }
+    code.uuid-code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 11.5px;
+      color: var(--primary);
+      background: rgba(56, 189, 248, 0.1);
+      padding: 2px 6px;
+      border-radius: 5px;
+    }
   </style>
 </head>
 <body>
@@ -222,6 +252,7 @@ def simulator_ui():
         <h1>🛠️ Simulador de Vida Útil Restante (RUL) — Motores Industriais</h1>
       </div>
       <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <a href="/predictions" target="_blank">🗄️ JSON SQLite (/predictions)</a>
         <a href="/motors/status" target="_blank">📊 JSON Motores (/motors/status)</a>
         <a href="/alerts" target="_blank">📧 JSON Alertas (/alerts)</a>
         <a href="/docs" target="_blank">📄 Swagger (/docs)</a>
@@ -243,11 +274,11 @@ def simulator_ui():
           <div class="form-grid">
             <div class="field">
               <label>ID do Motor (machine_id)</label>
-              <input id="machine_id" type="number" min="1" max="10000" value="1" required />
+              <input id="machine_id" type="number" min="1" max="10000" value="1" oninput="onTelemetryChange()" required />
             </div>
             <div class="field">
               <label>Família do Motor (model_type)</label>
-              <select id="model_type">
+              <select id="model_type" onchange="onTelemetryChange()">
                 <option value="model1">model1 (Série A)</option>
                 <option value="model2">model2 (Série B)</option>
                 <option value="model3">model3 (Série C)</option>
@@ -256,7 +287,7 @@ def simulator_ui():
             </div>
             <div class="field">
               <label>Idade do Motor (anos) <strong id="age_lbl">12</strong></label>
-              <input id="age" type="range" min="1" max="25" step="1" value="12" oninput="age_lbl.textContent=this.value" />
+              <input id="age" type="range" min="1" max="25" step="1" value="12" oninput="age_lbl.textContent=this.value; onTelemetryChange();" />
             </div>
             <div class="field">
               <label>Regime de Trabalho (Horas/Dia)</label>
@@ -268,27 +299,27 @@ def simulator_ui():
             </div>
             <div class="field">
               <label>Tensão Elétrica (V) <strong id="volt_lbl">175.0</strong></label>
-              <input id="volt" type="range" min="120" max="230" step="0.5" value="175.0" oninput="volt_lbl.textContent=this.value" />
+              <input id="volt" type="range" min="120" max="230" step="0.5" value="175.0" oninput="volt_lbl.textContent=this.value; onTelemetryChange();" />
             </div>
             <div class="field">
               <label>Rotação (RPM) <strong id="rotate_lbl">425</strong></label>
-              <input id="rotate" type="range" min="250" max="600" step="1" value="425" oninput="rotate_lbl.textContent=this.value" />
+              <input id="rotate" type="range" min="250" max="600" step="1" value="425" oninput="rotate_lbl.textContent=this.value; onTelemetryChange();" />
             </div>
             <div class="field">
               <label>Pressão (psi) <strong id="pressure_lbl">102.0</strong></label>
-              <input id="pressure" type="range" min="65" max="150" step="0.5" value="102.0" oninput="pressure_lbl.textContent=this.value" />
+              <input id="pressure" type="range" min="65" max="150" step="0.5" value="102.0" oninput="pressure_lbl.textContent=this.value; onTelemetryChange();" />
             </div>
             <div class="field">
               <label>Vibração (m/s²) <strong id="vibration_lbl">43.0</strong></label>
-              <input id="vibration" type="range" min="20" max="75" step="0.5" value="43.0" oninput="vibration_lbl.textContent=this.value" />
+              <input id="vibration" type="range" min="20" max="75" step="0.5" value="43.0" oninput="vibration_lbl.textContent=this.value; onTelemetryChange();" />
             </div>
             <div class="field">
               <label>Erros nas últimas 24h <strong id="err_lbl">1</strong></label>
-              <input id="recent_errors" type="range" min="0" max="10" step="1" value="1" oninput="err_lbl.textContent=this.value" />
+              <input id="recent_errors" type="range" min="0" max="10" step="1" value="1" oninput="err_lbl.textContent=this.value; onTelemetryChange();" />
             </div>
             <div class="field">
               <label>Dias desde última manutenção <strong id="maint_lbl">10.5</strong></label>
-              <input id="days_since_maint" type="range" min="0" max="90" step="0.5" value="10.5" oninput="maint_lbl.textContent=this.value" />
+              <input id="days_since_maint" type="range" min="0" max="90" step="0.5" value="10.5" oninput="maint_lbl.textContent=this.value; onTelemetryChange();" />
             </div>
           </div>
 
@@ -298,8 +329,14 @@ def simulator_ui():
               <input id="alert_email" type="email" value="" placeholder="Deixe vazio para usar ALERT_EMAIL_TO do .env" />
             </div>
             <div class="field">
-              <label>Idempotency-Key (opcional)</label>
-              <input id="idempotency_key" type="text" placeholder="Ex: sensor-evt-001" />
+              <label>
+                <span>Idempotency-Key (UUID v4 automático)</span>
+                <span style="display:flex; gap:4px;">
+                  <button type="button" class="mini-btn" onclick="fillNewUUID()" title="Gerar um novo UUID v4">🎲 Novo UUID</button>
+                  <button type="button" class="mini-btn" onclick="clearIdempotencyKey()" title="Limpar campo">🧹 Limpar</button>
+                </span>
+              </label>
+              <input id="idempotency_key" type="text" data-auto-generated="false" oninput="this.dataset.autoGenerated='false'" placeholder="Vazio = gera e preenche UUID v4 ao executar" />
             </div>
           </div>
 
@@ -320,6 +357,7 @@ def simulator_ui():
           <p id="recDisplay" style="font-size:13.5px; color:var(--muted); line-height:1.5;">
             Clique em "Executar Predição no Modelo" para projetar as datas de falha baseadas no modelo <code>models/model.joblib</code>.
           </p>
+          <div id="sqliteMetaBanner" class="sqlite-meta-banner"></div>
           <div id="emailAlertBanner" class="alert-banner"></div>
         </div>
 
@@ -333,11 +371,59 @@ def simulator_ui():
       </div>
     </div>
 
-    <!-- Seção 3: Listagem de Motores por Status nas 3 Faixas de RUL -->
+    <!-- Seção 3: Visualização das Gravações dos Registros no SQLite (prediction_logs) -->
     <div class="card">
       <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; border-bottom: 1px solid var(--border); padding-bottom: 12px;">
         <div>
-          <h2 style="border:none; padding:0;">3. Monitoramento de Motores pelas 3 Faixas de RUL (Último Estado por Motor)</h2>
+          <h2 style="border:none; padding:0;">3. Gravações de Registros no SQLite (Tabela <code>prediction_logs</code> — <code>GET /predictions</code>)</h2>
+          <p style="font-size:12px; color:var(--muted); margin-top:4px;">
+            Auditoria completa das predições persistidas em <code>data/predictions.db</code> com chave <code>Idempotency-Key</code> (UUID v4). Total exibido: <strong id="sqliteTotalCount" style="color:var(--primary);">0</strong> registros.
+          </p>
+        </div>
+        <div class="filter-tabs">
+          <input id="sqliteFilterMachine" type="number" min="1" placeholder="Filtrar Motor #ID" style="width:140px; padding:7px 10px; font-size:12.5px;" oninput="loadSqliteRecords()" />
+          <select id="sqliteFilterStatus" onchange="loadSqliteRecords()" style="padding:7px 10px; font-size:12.5px;">
+            <option value="">Todos os Status</option>
+            <option value="CRÍTICO">🔴 CRÍTICO</option>
+            <option value="ALERTA">🟡 ALERTA</option>
+            <option value="NORMAL">🟢 NORMAL</option>
+          </select>
+          <select id="sqliteFilterLimit" onchange="loadSqliteRecords()" style="padding:7px 10px; font-size:12.5px;">
+            <option value="20">Últimos 20</option>
+            <option value="50" selected>Últimos 50</option>
+            <option value="100">Últimos 100</option>
+          </select>
+          <button type="button" class="tab-btn" onclick="loadSqliteRecords()">🔄 Atualizar SQLite</button>
+        </div>
+      </div>
+
+      <div style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>ID SQLite</th>
+              <th>Data/Hora (UTC)</th>
+              <th>Idempotency-Key (UUID v4)</th>
+              <th>Motor / Família</th>
+              <th>Telemetria (V / RPM / psi / m/s²)</th>
+              <th>Idade / Erros / Manut.</th>
+              <th>RUL Gravada</th>
+              <th>Status</th>
+              <th>Ação</th>
+            </tr>
+          </thead>
+          <tbody id="sqliteRecordsBody">
+            <tr><td colspan="9" style="color:var(--muted);">Carregando gravações do banco SQLite...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Seção 4: Listagem de Motores por Status nas 3 Faixas de RUL -->
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; border-bottom: 1px solid var(--border); padding-bottom: 12px;">
+        <div>
+          <h2 style="border:none; padding:0;">4. Monitoramento de Motores pelas 3 Faixas de RUL (Último Estado por Motor)</h2>
           <p style="font-size:12px; color:var(--muted); margin-top:4px;">Filtre os ativos industriais monitorados de acordo com a criticidade da Vida Útil Restante (<code>GET /motors/status</code>)</p>
         </div>
         <div class="filter-tabs">
@@ -378,14 +464,15 @@ def simulator_ui():
       </div>
     </div>
 
-    <!-- Seção 4: Histórico de Alertas de E-mail Disparados -->
+    <!-- Seção 5: Histórico de Alertas de E-mail Disparados -->
     <div class="card">
-      <h2>4. Central de Alertas de E-mail Disparados Automaticamente (Status ALERTA e CRÍTICO)</h2>
+      <h2>5. Central de Alertas de E-mail Disparados Automaticamente (Tabela SQLite <code>email_alert_logs</code>)</h2>
       <div style="overflow-x:auto;">
         <table>
           <thead>
             <tr>
               <th>ID Alerta</th>
+              <th>ID Predição</th>
               <th>Motor / Família</th>
               <th>Status</th>
               <th>RUL (h)</th>
@@ -395,7 +482,7 @@ def simulator_ui():
             </tr>
           </thead>
           <tbody id="alertsBody">
-            <tr><td colspan="7" style="color:var(--muted);">Nenhum alerta disparado ainda.</td></tr>
+            <tr><td colspan="8" style="color:var(--muted);">Nenhum alerta disparado ainda.</td></tr>
           </tbody>
         </table>
       </div>
@@ -405,6 +492,45 @@ def simulator_ui():
   <script>
     let rulChartInstance = null;
     let currentBandFilter = '';
+    let lastProcessedKeys = new Set();
+
+    function generateUUIDv4() {
+      if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+        return window.crypto.randomUUID();
+      }
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        const r = Math.random() * 16 | 0;
+        const v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+      });
+    }
+
+    function fillNewUUID() {
+      const input = document.getElementById('idempotency_key');
+      input.value = generateUUIDv4();
+      input.dataset.autoGenerated = 'false';
+    }
+
+    function clearIdempotencyKey() {
+      const input = document.getElementById('idempotency_key');
+      input.value = '';
+      input.dataset.autoGenerated = 'false';
+    }
+
+    function reuseIdempotencyKey(key) {
+      const input = document.getElementById('idempotency_key');
+      input.value = key;
+      input.dataset.autoGenerated = 'false';
+      input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function onTelemetryChange() {
+      const input = document.getElementById('idempotency_key');
+      if (input && input.dataset.autoGenerated === 'true') {
+        input.value = '';
+        input.dataset.autoGenerated = 'false';
+      }
+    }
 
     function applyPreset(mId, volt, rotate, pressure, vibration, age, err, maint) {
       document.getElementById('machine_id').value = mId;
@@ -415,6 +541,7 @@ def simulator_ui():
       document.getElementById('age').value = age; document.getElementById('age_lbl').textContent = age;
       document.getElementById('recent_errors').value = err; document.getElementById('err_lbl').textContent = err;
       document.getElementById('days_since_maint').value = maint; document.getElementById('maint_lbl').textContent = maint;
+      clearIdempotencyKey();
     }
 
     function statusColor(st) {
@@ -423,9 +550,73 @@ def simulator_ui():
       return 'var(--success)';
     }
 
+    function formatUtcTimestamp(ts) {
+      if (!ts) return '-';
+      try {
+        const d = new Date(ts);
+        if (isNaN(d.getTime())) return ts;
+        return d.toLocaleString('pt-BR');
+      } catch (_) {
+        return ts;
+      }
+    }
+
+    async function loadSqliteRecords() {
+      try {
+        const machineId = document.getElementById('sqliteFilterMachine').value.trim();
+        const statusFilter = document.getElementById('sqliteFilterStatus').value;
+        const limit = document.getElementById('sqliteFilterLimit').value || '50';
+
+        const params = new URLSearchParams({ limit });
+        if (machineId) params.set('machine_id', machineId);
+        if (statusFilter) params.set('status', statusFilter);
+
+        const res = await fetch(`/predictions?${params.toString()}`);
+        const logs = await res.json();
+
+        document.getElementById('sqliteTotalCount').textContent = logs.length;
+        const tbody = document.getElementById('sqliteRecordsBody');
+
+        if (!logs || !logs.length) {
+          tbody.innerHTML = '<tr><td colspan="9" style="color:var(--muted);">Nenhum registro gravado no SQLite para os filtros selecionados.</td></tr>';
+          return;
+        }
+
+        logs.forEach(l => {
+          if (l.idempotency_key) lastProcessedKeys.add(l.idempotency_key);
+        });
+
+        tbody.innerHTML = logs.map(l => `
+          <tr>
+            <td><strong>#${l.id}</strong></td>
+            <td style="color:var(--muted); white-space:nowrap;">${formatUtcTimestamp(l.timestamp)}</td>
+            <td>
+              ${l.idempotency_key
+                ? `<code class="uuid-code">${l.idempotency_key}</code>`
+                : '<span style="color:var(--muted);">—</span>'}
+            </td>
+            <td><strong>Motor #${l.machine_id}</strong> (<code>${l.model_type || 'model1'}</code>)</td>
+            <td>${l.volt.toFixed(1)}V | ${l.rotate.toFixed(0)}RPM | ${l.pressure.toFixed(1)}psi | ${l.vibration.toFixed(1)}m/s²</td>
+            <td>${l.age}a | ${l.recent_errors} err | ${l.days_since_maint}d</td>
+            <td><strong>${l.predicted_rul_hours.toFixed(2)}h</strong></td>
+            <td><span style="color:${statusColor(l.status)}; font-weight:800;">${l.status}</span></td>
+            <td>
+              ${l.idempotency_key
+                ? `<button type="button" class="mini-btn" onclick="reuseIdempotencyKey('${l.idempotency_key}')">📋 Reutilizar Chave</button>`
+                : ''}
+            </td>
+          </tr>
+        `).join('');
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
     async function filterMotorsByBand(band) {
       currentBandFilter = band;
-      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        if (btn.id && btn.id.startsWith('tab-')) btn.classList.remove('active');
+      });
       const activeId = band ? `tab-${band}` : 'tab-ALL';
       const activeEl = document.getElementById(activeId);
       if (activeEl) activeEl.classList.add('active');
@@ -474,12 +665,13 @@ def simulator_ui():
         const alerts = await res.json();
         const tbody = document.getElementById('alertsBody');
         if (!alerts.length) {
-          tbody.innerHTML = '<tr><td colspan="7" style="color:var(--muted);">Nenhum alerta de e-mail disparado ainda. Simule um cenário ALERTA ou CRÍTICO para testar.</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="8" style="color:var(--muted);">Nenhum alerta de e-mail disparado ainda. Simule um cenário ALERTA ou CRÍTICO para testar.</td></tr>';
           return;
         }
         tbody.innerHTML = alerts.map(a => `
           <tr>
             <td>#${a.id}</td>
+            <td>${a.prediction_id ? `#${a.prediction_id}` : '—'}</td>
             <td>Motor #${a.machine_id} (<code>${a.model_type || 'model1'}</code>)</td>
             <td><span style="color:${statusColor(a.status)}; font-weight:800;">${a.status}</span></td>
             <td><strong>${a.predicted_rul_hours.toFixed(1)}h</strong></td>
@@ -587,9 +779,21 @@ def simulator_ui():
         alert_email: alertEmail || null
       };
 
-      const headers = { 'Content-Type': 'application/json' };
-      const idemKey = document.getElementById('idempotency_key').value.trim();
-      if (idemKey) headers['Idempotency-Key'] = idemKey;
+      // Gera e preenche automaticamente um UUID v4 caso o campo Idempotency-Key esteja vazio
+      const idemInput = document.getElementById('idempotency_key');
+      let idemKey = idemInput.value.trim();
+      if (!idemKey) {
+        idemKey = generateUUIDv4();
+        idemInput.value = idemKey;
+        idemInput.dataset.autoGenerated = 'true';
+      }
+
+      const wasAlreadyProcessed = lastProcessedKeys.has(idemKey);
+
+      const headers = {
+        'Content-Type': 'application/json',
+        'Idempotency-Key': idemKey
+      };
 
       const res = await fetch('/predict', {
         method: 'POST',
@@ -597,6 +801,11 @@ def simulator_ui():
         body: JSON.stringify(payload)
       });
       const data = await res.json();
+
+      if (data.idempotency_key) {
+        idemInput.value = data.idempotency_key;
+        lastProcessedKeys.add(data.idempotency_key);
+      }
 
       document.getElementById('rulDisplay').textContent = `${data.predicted_rul_hours.toFixed(2)} horas`;
       document.getElementById('recDisplay').textContent = data.recommendation;
@@ -614,6 +823,12 @@ def simulator_ui():
         badge.style.color = 'var(--success)';
       }
 
+      const sqliteMetaBanner = document.getElementById('sqliteMetaBanner');
+      sqliteMetaBanner.style.display = 'block';
+      sqliteMetaBanner.innerHTML = wasAlreadyProcessed
+        ? `♻️ <strong>Idempotência Ativa (Sem Duplicação no SQLite):</strong> Registro SQLite <strong>#${data.record_id || '—'}</strong> retornado para a chave <code class="uuid-code">${data.idempotency_key || idemKey}</code>.`
+        : `🗄️ <strong>Gravado no SQLite:</strong> Registro <strong>#${data.record_id || '—'}</strong> | <code>Idempotency-Key</code>: <code class="uuid-code">${data.idempotency_key || idemKey}</code>`;
+
       const alertBanner = document.getElementById('emailAlertBanner');
       if (data.email_alert_triggered) {
         alertBanner.style.display = 'block';
@@ -626,10 +841,12 @@ def simulator_ui():
       const shiftH = parseFloat(document.getElementById("work_shift").value) || 24;
       drawChart(data.predicted_rul_hours, data.status, shiftH);
 
+      await loadSqliteRecords();
       await loadMotorsByBand();
       await loadEmailAlerts();
     }
 
+    loadSqliteRecords();
     loadMotorsByBand();
     loadEmailAlerts();
   </script>
