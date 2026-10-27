@@ -11,7 +11,7 @@
 
 Na indústria de manufatura contínua, paradas não planejadas de motores e ativos rotativos geram severos prejuízos operacionais, enquanto manutenções preventivas baseadas apenas em calendário trocam componentes ainda saudáveis.
 
-Este projeto resolve esse problema de negócio disponibilizando um **pipeline preditivo de Machine Learning em produção via API RESTful (FastAPI)**: a partir de leituras de sensores em tempo real (tensão elétrica, rotação, pressão e vibração), somadas à idade do ativo, família construtiva do motor, histórico de erros nas últimas 24h e dias desde a última manutenção, o sistema estima quantas **horas de vida útil restam até a próxima falha (RUL)**, classifica o risco operacional (**NORMAL**, **ALERTA** ou **CRÍTICO**), recomenda a ação de engenharia adequada, dispara **alertas automáticos por e-mail** para os estados **ALERTA** e **CRÍTICO**, e registra os logs de auditoria em banco **SQLite** com garantia de **Idempotência (`Idempotency-Key`)**.
+Este projeto resolve esse problema de negócio disponibilizando um **pipeline preditivo de Machine Learning em produção via API RESTful (FastAPI)**: a partir de leituras de sensores em tempo real (tensão elétrica, rotação, pressão e vibração), somadas à idade do ativo, família construtiva do motor, histórico de erros nas últimas 24h e dias desde a última manutenção, o sistema estima quantas **horas de vida útil restam até a próxima falha (RUL)**, classifica o risco operacional (**NORMAL**, **ALERTA** ou **CRÍTICO**), recomenda a ação de engenharia adequada, dispara **alertas automáticos por e-mail** para os estados **ALERTA** e **CRÍTICO**, e registra os logs de auditoria em banco **SQLite** com garantia de **Idempotência (`Idempotency-Key` com geração automática de UUID v4)**.
 
 ---
 
@@ -27,7 +27,7 @@ Este projeto resolve esse problema de negócio disponibilizando um **pipeline pr
   5. `PdM_maint.csv`: Intervenções anteriores para cálculo dos dias desde a última manutenção (`days_since_maint`).
 
 ### Tratamento, Divisão de Dados e Pipeline Serializado
-* **Divisão Estrita:** `42.542` janelas temporais consolidadas, divididas em **Treino (70%)**, **Validação (15%)** e **Teste Holdout (15%)**.
+* **Divisão Estrita:** `42.542` janelas temporais consolidadas (6h cada), divididas em **Treino (70%)**, **Validação (15%)** e **Teste Holdout (15%)**.
 * **Pré-processamento Automatizado (`ColumnTransformer` + `Pipeline`):**
   * **Variáveis Numéricas (`volt`, `rotate`, `pressure`, `vibration`, `age`, `recent_errors`, `days_since_maint`):** Imputação de nulos pela mediana (`SimpleImputer(strategy="median")`) + padronização z-score (`StandardScaler()`).
   * **Variáveis Categóricas (`model_type`):** Imputação pela moda (`SimpleImputer(strategy="most_frequent")`) + codificação binária (`OneHotEncoder(handle_unknown="ignore")`).
@@ -130,8 +130,9 @@ pytest -v tests/
 ### Links Interativos da Aplicação (Servidor Local)
 * **Documentação Interativa Swagger UI (`/docs`):** [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
 * **Documentação Alternativa ReDoc (`/redoc`):** [http://127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc)
-* **Painel Simulador Web com Gráfico de Degradação (`/simulador`):** [http://127.0.0.1:8000/simulador](http://127.0.0.1:8000/simulador)
+* **Painel Simulador Web com Gráfico e Visualizador SQLite (`/simulador`):** [http://127.0.0.1:8000/simulador](http://127.0.0.1:8000/simulador)
 * **Monitoramento de Saúde e Modelo em RAM (`/health`):** [http://127.0.0.1:8000/health](http://127.0.0.1:8000/health)
+* **Histórico de Gravações no Banco SQLite (`/predictions`):** [http://127.0.0.1:8000/predictions](http://127.0.0.1:8000/predictions)
 * **Monitoramento de Motores pelas 3 Faixas de RUL (`/motors/status`):** [http://127.0.0.1:8000/motors/status](http://127.0.0.1:8000/motors/status)
 * **Histórico de Alertas Automáticos de E-mail (`/alerts`):** [http://127.0.0.1:8000/alerts](http://127.0.0.1:8000/alerts)
 
@@ -150,15 +151,15 @@ pytest -v tests/
 #### 2. Inferência Preditiva (`POST /predict` ou `POST /v1/predict`) — Payload JSON de Entrada:
 ```json
 {
-  "machine_id": 1,
+  "machine_id": 12,
   "model_type": "model1",
-  "volt": 172.5,
-  "rotate": 418.0,
-  "pressure": 115.2,
-  "vibration": 46.8,
-  "age": 14.0,
-  "recent_errors": 2,
-  "days_since_maint": 25.0,
+  "volt": 192.0,
+  "rotate": 375.0,
+  "pressure": 125.0,
+  "vibration": 56.0,
+  "age": 15.0,
+  "recent_errors": 4,
+  "days_since_maint": 48.0,
   "alert_email": "manutencao.pcm@industria-senai.com.br"
 }
 ```
@@ -166,8 +167,10 @@ pytest -v tests/
 #### Resposta (`200 OK` — `PredictionResponse`):
 ```json
 {
-  "machine_id": 1,
-  "predicted_rul_hours": 142.85,
+  "record_id": 1,
+  "idempotency_key": "550e8400-e29b-41d4-a716-446655440000",
+  "machine_id": 12,
+  "predicted_rul_hours": 118.43,
   "status": "ALERTA",
   "recommendation": "Agendar inspeção e lubrificação/troca de peças no próximo ciclo de manutenção semanal.",
   "email_alert_triggered": true,
