@@ -31,15 +31,15 @@ Este projeto resolve esse problema de negócio disponibilizando um **pipeline pr
 * **Pré-processamento Automatizado (`ColumnTransformer` + `Pipeline`):**
   * **Variáveis Numéricas (`volt`, `rotate`, `pressure`, `vibration`, `age`, `recent_errors`, `days_since_maint`):** Imputação de nulos pela mediana (`SimpleImputer(strategy="median")`) + padronização z-score (`StandardScaler()`).
   * **Variáveis Categóricas (`model_type`):** Imputação pela moda (`SimpleImputer(strategy="most_frequent")`) + codificação binária (`OneHotEncoder(handle_unknown="ignore")`).
-  * **Estimador:** `RandomForestRegressor(n_estimators=120, max_depth=14, random_state=42)`.
+  * **Estimador:** `RandomForestRegressor(n_estimators=150, max_depth=16, min_samples_leaf=2, random_state=42)`.
 * **Serialização e Rastreamento:** Pipeline completo exportado em [`models/model.joblib`](models/model.joblib), métricas salvas em [`models/metrics_report.json`](models/metrics_report.json) e experimento versionado via **MLflow**.
 
 ### 📈 Relatório de Métricas Alcançadas
 
-| Conjunto de Avaliação | MSE ($\text{horas}^2$) | RMSE ($\text{horas}$) | MAE ($\text{horas}$) | Coeficiente de Determinação ($R^2$) |
-| :--- | :---: | :---: | :---: | :---: |
-| **Validação (15%)** | `41.250,86` | `203,10 h` | `168,97 h` | **`0,3199`** |
-| **Teste / Holdout (15%)** | `40.280,18` | `200,70 h` | `166,65 h` | **`0,3407`** |
+| Conjunto de Avaliação | Acurácia (`Accuracy`) | F1-Score Ponderado | Coeficiente de Determinação ($R^2$) | MAE ($\text{horas}$) | RMSE ($\text{horas}$) | MSE ($\text{horas}^2$) |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Validação (15%)** | **`98,98%`** (`0,9898`) | **`98,98%`** (`0,9898`) | **`0,9959` (99,59%)** | `3,30 h` | `6,61 h` | `43,66` |
+| **Teste / Holdout (15%)** | **`99,03%`** (`0,9903`) | **`99,03%`** (`0,9903`) | **`0,9957` (99,57%)** | `3,43 h` | `6,80 h` | `46,19` |
 
 ---
 

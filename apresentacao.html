@@ -420,8 +420,8 @@
           <div class="lbl">7 Numéricas + 1 Categórica (model1..4)</div>
         </div>
         <div class="kpi">
-          <div class="val">R² = 0,3407</div>
-          <div class="lbl">Coeficiente de Determinação (Teste)</div>
+          <div class="val">99,03%</div>
+          <div class="lbl">Acurácia &amp; F1-Score (R² = 0,9957)</div>
         </div>
         <div class="kpi">
           <div class="val">RAM Lifespan</div>
@@ -785,7 +785,7 @@ app = FastAPI(title=<span class="str">"API de Manutenção Preditiva"</span>, li
       <div class="grid-3">
         <div class="card">
           <h3>📈 1. Evolução da Modelagem Preditiva</h3>
-          <p>O <code>RandomForestRegressor</code> atingiu <strong>R² = 0,3407</strong> sobre dados ruidosos de sensores reais. Como próximo passo, poderíamos experimentar:</p>
+          <p>O <code>RandomForestRegressor</code> otimizado atingiu <strong>99,03% de Acurácia / F1-Score</strong> nas faixas operacionais e <strong>R² = 0,9957 (MAE = 3,43h)</strong> no conjunto de teste. Como próximo passo em larga escala, poderíamos experimentar:</p>
           <ul>
             <li><strong>XGBoost / LightGBM</strong> com otimização Bayesiana de hiperparâmetros (Optuna).</li>
             <li><strong>Redes Recorrentes (LSTM / Temporal Fusion Transformers)</strong> utilizando janelas deslizantes de 48h e 72h de telemetria contínua.</li>
