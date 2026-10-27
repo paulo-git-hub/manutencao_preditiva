@@ -1,3 +1,4 @@
+import uuid
 import pytest
 from fastapi.testclient import TestClient
 from src.main import app
@@ -37,6 +38,7 @@ def test_root_endpoint(client: TestClient):
     data = response.json()
     assert "message" in data
     assert data["docs_url"] == "/docs"
+    assert data["sqlite_records_url"] == "/predictions"
     assert data["motors_by_status_url"] == "/motors/status"
     assert data["email_alerts_url"] == "/alerts"
 
@@ -49,7 +51,7 @@ def test_health_check_endpoint(client: TestClient):
     assert data["model_loaded"] is True
 
 
-def test_predict_success(client: TestClient):
+def test_predict_success_and_auto_uuid_v4(client: TestClient):
     payload = {
         "machine_id": 1,
         "model_type": "model1",
@@ -65,6 +67,10 @@ def test_predict_success(client: TestClient):
     assert response.status_code == 200
     data = response.json()
     assert data["machine_id"] == 1
+    assert data["record_id"] is not None
+    assert data["idempotency_key"] is not None
+    parsed_uuid = uuid.UUID(data["idempotency_key"], version=4)
+    assert str(parsed_uuid) == data["idempotency_key"]
     assert "predicted_rul_hours" in data
     assert data["predicted_rul_hours"] > 0
     assert data["status"] in ["CRÍTICO", "ALERTA", "NORMAL"]
@@ -123,8 +129,18 @@ def test_list_predictions_endpoint(client: TestClient):
     assert isinstance(logs, list)
     assert len(logs) >= 1
     assert logs[0]["machine_id"] == 1
+    assert logs[0]["idempotency_key"] is not None
     assert "predicted_rul_hours" in logs[0]
     assert "timestamp" in logs[0]
+
+
+def test_simulator_ui_contains_uuid_and_sqlite_viewer(client: TestClient):
+    response = client.get("/simulador")
+    assert response.status_code == 200
+    html = response.text
+    assert "generateUUIDv4" in html
+    assert "loadSqliteRecords" in html
+    assert "sqliteRecordsBody" in html
 
 
 def test_motors_by_rul_band_and_email_alerts(client: TestClient):

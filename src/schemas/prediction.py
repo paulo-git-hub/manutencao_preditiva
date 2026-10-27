@@ -83,6 +83,14 @@ class PredictionRequest(BaseModel):
 
 
 class PredictionResponse(BaseModel):
+    record_id: Optional[int] = Field(
+        default=None,
+        description="ID do registro persistido na tabela prediction_logs do SQLite"
+    )
+    idempotency_key: Optional[str] = Field(
+        default=None,
+        description="Chave de idempotência (UUID v4 gerado automaticamente ou chave enviada pelo cliente)"
+    )
     machine_id: int = Field(..., gt=0, description="Identificador da máquina avaliada")
     predicted_rul_hours: float = Field(..., ge=0, description="Vida útil restante estimada em horas (RUL)")
     status: str = Field(..., description="Classificação de criticidade: CRÍTICO, ALERTA ou NORMAL")
