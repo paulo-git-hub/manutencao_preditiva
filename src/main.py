@@ -235,7 +235,7 @@ def simulator_ui():
         <h2>1. Parâmetros de Telemetria e Operação</h2>
         <div class="presets">
           <button type="button" class="preset-btn" onclick="applyPreset(1, 168, 445, 98, 38, 5, 0, 4)">🟢 Cenário NORMAL (>168h)</button>
-          <button type="button" class="preset-btn" onclick="applyPreset(12, 185, 405, 118, 50, 15, 3, 35)">🟡 Cenário ALERTA (48h–168h)</button>
+          <button type="button" class="preset-btn" onclick="applyPreset(12, 192, 375, 125, 56, 15, 4, 48)">🟡 Cenário ALERTA (48h–168h)</button>
           <button type="button" class="preset-btn" onclick="applyPreset(25, 215, 310, 145, 72, 20, 8, 75)">🔴 Cenário CRÍTICO (≤48h)</button>
         </div>
 
