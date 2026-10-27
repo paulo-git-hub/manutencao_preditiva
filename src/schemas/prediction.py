@@ -1,6 +1,6 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Optional
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict, field_validator
 
 
 class HealthResponse(BaseModel):
@@ -128,6 +128,15 @@ class PredictionLogSchema(BaseModel):
     recommendation: Optional[str] = None
     timestamp: datetime
 
+    @field_validator("timestamp", mode="after")
+    @classmethod
+    def to_local_timezone(cls, v: datetime) -> datetime:
+        if v is None:
+            return v
+        if v.tzinfo is None:
+            v = v.replace(tzinfo=timezone.utc)
+        return v.astimezone()
+
 
 class EmailAlertLogSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -143,6 +152,15 @@ class EmailAlertLogSchema(BaseModel):
     body: str
     delivery_mode: str
     timestamp: datetime
+
+    @field_validator("timestamp", mode="after")
+    @classmethod
+    def to_local_timezone(cls, v: datetime) -> datetime:
+        if v is None:
+            return v
+        if v.tzinfo is None:
+            v = v.replace(tzinfo=timezone.utc)
+        return v.astimezone()
 
 
 class MotorsByRulBandResponse(BaseModel):
