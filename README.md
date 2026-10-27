@@ -58,6 +58,7 @@ Este projeto resolve esse problema de negócio disponibilizando um **pipeline pr
 | **MLflow** | `>=2.5.0` | Rastreamento de hiperparâmetros, métricas e registro do modelo |
 | **Matplotlib & Seaborn** | `>=3.7.0` / `>=0.12.0` | Visualização gráfica e matriz de correlação no Notebook de EDA |
 | **Pytest & HTTPX** | `>=7.4.0` / `>=0.24.0` | Suíte de testes automatizados de integração dos endpoints e validações HTTP |
+| **Docker** | `20.10+` | Containerização da API FastAPI e do artefato serializado para implantação |
 
 ---
 
@@ -103,6 +104,22 @@ python -m uvicorn src.main:app --host 127.0.0.1 --port 8000 --reload
 pytest -v tests/
 ```
 
+### 4.5 (Opcional) Execução via Docker (Containerização)
+
+O projeto já está preparado com [`Dockerfile`](Dockerfile) e [`.dockerignore`](.dockerignore) na raiz para empacotamento completo da API e do modelo preditivo:
+
+```bash
+# 1. Construir a imagem Docker na raiz do projeto
+docker build -t manutencao-preditiva-api .
+
+# 2. Executar o container mapeando a porta 8000
+docker run -d --name api-manutencao -p 8000:8000 manutencao-preditiva-api
+
+# 3. (Opcional) Acompanhar os logs do container em execução
+docker logs -f api-manutencao
+```
+> Após iniciar o container, acesse normalmente [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs) ou [http://127.0.0.1:8000/simulador](http://127.0.0.1:8000/simulador).
+
 ---
 
 ## 5. Documentação da API e Arquitetura Modular (Fases 2 a 5)
@@ -124,6 +141,7 @@ pytest -v tests/
 │-- apresentacao.html             # Slides interativos guiados para o vídeo (Item 5.4)
 │-- producao-gcp-arquitetura.md   # Arquitetura de evolução e escala no Google Cloud Platform (GCP)
 │-- Dockerfile                    # Empacotamento em container
+│-- .dockerignore                 # Filtro de arquivos ignorados no build da imagem Docker
 │-- requirements.txt              # Dependências com versões
 └── README.md                     # Documentação técnica principal
 ```
