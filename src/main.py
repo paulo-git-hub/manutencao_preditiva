@@ -402,7 +402,7 @@ def simulator_ui():
           <thead>
             <tr>
               <th>ID SQLite</th>
-              <th>Data/Hora (UTC)</th>
+              <th>Data/Hora (Horário Local)</th>
               <th>Idempotency-Key (UUID v4)</th>
               <th>Motor / Família</th>
               <th>Telemetria (V / RPM / psi / m/s²)</th>
@@ -473,6 +473,7 @@ def simulator_ui():
             <tr>
               <th>ID Alerta</th>
               <th>ID Predição</th>
+              <th>Data/Hora (Horário Local)</th>
               <th>Motor / Família</th>
               <th>Status</th>
               <th>RUL (h)</th>
@@ -482,7 +483,7 @@ def simulator_ui():
             </tr>
           </thead>
           <tbody id="alertsBody">
-            <tr><td colspan="8" style="color:var(--muted);">Nenhum alerta disparado ainda.</td></tr>
+            <tr><td colspan="9" style="color:var(--muted);">Nenhum alerta disparado ainda.</td></tr>
           </tbody>
         </table>
       </div>
@@ -550,12 +551,20 @@ def simulator_ui():
       return 'var(--success)';
     }
 
-    function formatUtcTimestamp(ts) {
+    function formatLocalTimestamp(ts) {
       if (!ts) return '-';
       try {
-        const d = new Date(ts);
+        const normalized = (typeof ts === 'string' && !/Z|[+-]\d{2}:?\d{2}$/.test(ts)) ? `${ts}Z` : ts;
+        const d = new Date(normalized);
         if (isNaN(d.getTime())) return ts;
-        return d.toLocaleString('pt-BR');
+        return d.toLocaleString('pt-BR', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit'
+        });
       } catch (_) {
         return ts;
       }
@@ -589,7 +598,7 @@ def simulator_ui():
         tbody.innerHTML = logs.map(l => `
           <tr>
             <td><strong>#${l.id}</strong></td>
-            <td style="color:var(--muted); white-space:nowrap;">${formatUtcTimestamp(l.timestamp)}</td>
+            <td style="color:var(--muted); white-space:nowrap;">${formatLocalTimestamp(l.timestamp)}</td>
             <td>
               ${l.idempotency_key
                 ? `<code class="uuid-code">${l.idempotency_key}</code>`
@@ -665,13 +674,14 @@ def simulator_ui():
         const alerts = await res.json();
         const tbody = document.getElementById('alertsBody');
         if (!alerts.length) {
-          tbody.innerHTML = '<tr><td colspan="8" style="color:var(--muted);">Nenhum alerta de e-mail disparado ainda. Simule um cenário ALERTA ou CRÍTICO para testar.</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="9" style="color:var(--muted);">Nenhum alerta de e-mail disparado ainda. Simule um cenário ALERTA ou CRÍTICO para testar.</td></tr>';
           return;
         }
         tbody.innerHTML = alerts.map(a => `
           <tr>
             <td>#${a.id}</td>
             <td>${a.prediction_id ? `#${a.prediction_id}` : '—'}</td>
+            <td style="color:var(--muted); white-space:nowrap;">${formatLocalTimestamp(a.timestamp)}</td>
             <td>Motor #${a.machine_id} (<code>${a.model_type || 'model1'}</code>)</td>
             <td><span style="color:${statusColor(a.status)}; font-weight:800;">${a.status}</span></td>
             <td><strong>${a.predicted_rul_hours.toFixed(1)}h</strong></td>
