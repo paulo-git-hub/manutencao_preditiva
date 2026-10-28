@@ -16,3 +16,7 @@ predictions.db
 mlflow.db
 mlruns/
 .pytest_cache/
+
+# Diversos
+ROTEIRO_GRAVACAO_VIDEO*.md
+ROTEIRO_GRAVACAO_VIDEO*.pdf
