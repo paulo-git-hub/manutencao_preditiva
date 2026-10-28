@@ -68,8 +68,8 @@ Este projeto resolve esse problema de negócio disponibilizando um **pipeline pr
 
 ```bash
 # 1. Clonar o repositório e acessar a pasta raiz
-git clone <URL_DO_SEU_REPOSITORIO_GITHUB>
-cd manutencao_industrial_preditiva
+git clone https://github.com/paulo-git-hub/manutencao_preditiva.git
+cd manutencao_preditiva
 
 # 2. Criar o ambiente virtual Python
 python -m venv venv
@@ -127,7 +127,7 @@ docker logs -f api-manutencao
 ### Estrutura em Camadas do Projeto
 
 ```text
-/manutencao_industrial_preditiva
+/manutencao_preditiva
 │-- /data                         # 5 datasets CSV da Azure Predictive Maintenance (caminhos relativos)
 │-- /models                       # Artefato binário serializado (model.joblib) e relatório (metrics_report.json)
 │-- /notebooks                    # Notebook estruturado por Fases (01_eda_and_training.ipynb)
@@ -213,5 +213,5 @@ Como proposta de evolução arquitetural para operação industrial em larga esc
 
 ## 7. Links das Evidências (Entrega AVA)
 
-* 🎥 **Link do Vídeo de Apresentação (Google Drive — Modo Leitor):** `[https://sites.google.com/sbsti.com/paulo-a-n-cordeiro]`
-* 💻 **Link do Repositório Público no GitHub:** `[https://github.com/paulo-git-hub/manutencao_preditiva.git]`
+* 🎥 **Link do Vídeo de Apresentação (Google Drive — Modo Leitor):** [https://sites.google.com/sbsti.com/paulo-a-n-cordeiro](https://sites.google.com/sbsti.com/paulo-a-n-cordeiro)
+* 💻 **Link do Repositório Público no GitHub:** [https://github.com/paulo-git-hub/manutencao_preditiva.git](https://github.com/paulo-git-hub/manutencao_preditiva.git)

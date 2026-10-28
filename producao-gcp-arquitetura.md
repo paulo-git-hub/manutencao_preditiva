@@ -12,7 +12,7 @@ Este documento detalha o mapeamento e a evolução da solução local de **Manut
 | **Ingestão de Telemetria** | Requisições síncronas `POST /predict` | **Google Cloud Pub/Sub** (Ingestão de eventos IoT em tempo real) |
 | **Processamento de Janela Móvel** | Pandas em memória | **Google Cloud Dataflow** (Apache Beam para janelas de 6h) |
 | **Servimento da API REST** | FastAPI + Uvicorn (local) | **Google Cloud Run** (Containers autoescaláveis) ou **GKE** |
-| **Banco de Dados Relacional** | SQLite (`prediction_logs.db`) | **Cloud SQL for PostgreSQL** (HA e conexões concorrentes) |
+| **Banco de Dados Relacional** | SQLite (`predictions.db`) | **Cloud SQL for PostgreSQL** (HA e conexões concorrentes) |
 | **Controle de Idempotência & Cache** | Tabela SQLite | **Google Cloud Memorystore for Redis** |
 | **Armazenamento de Histórico** | Arquivos CSV locais em `/data` | **Google Cloud Storage (GCS)** + **BigQuery** (Data Warehouse) |
 | **Registro de Modelos & MLOps** | MLflow local + `models/model.joblib` | **Vertex AI Model Registry** + **Cloud Storage** |
@@ -34,7 +34,7 @@ Este documento detalha o mapeamento e a evolução da solução local de **Manut
 
 ### 2.3. Persistência de Dados, Cache e Data Warehouse
 - **Cloud SQL for PostgreSQL:** Armazena os registros de predição (`prediction_logs`), status dos motores e tabelas operacionais com replicação regional e backups automáticos.
-- **Memorystore for Redis:** Gerencia o controle de idempotência (UUID v4 na `Idempotency-Key`) com tempo de resposta sub-militermilissegundo, além de guardar em cache predições recentes para evitar chamadas redundantes ao modelo.
+- **Memorystore for Redis:** Gerencia o controle de idempotência (UUID v4 na `Idempotency-Key`) com tempo de resposta sub-milissegundo, além de guardar em cache predições recentes para evitar chamadas redundantes ao modelo.
 - **BigQuery:** Data Warehouse serverless onde todos os logs e predições são espelhados em tempo real para análises estatísticas corporativas, BI (Looker) e retreinamento de modelos.
 
 ### 2.4. MLOps, Monitoramento e Detecção de Drift
