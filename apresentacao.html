@@ -505,7 +505,7 @@ python src/services/ml_service.py
 <span class="cmt"># 4. Iniciar servidor ASGI Uvicorn</span>
 python -m uvicorn src.main:app --host 127.0.0.1 --port 8000 --reload
 
-<span class="cmt"># 5. Executar a suíte de 9 testes automatizados</span>
+<span class="cmt"># 5. Executar a suíte de 10 testes automatizados</span>
 pytest -v tests/</pre>
         </div>
 
@@ -547,9 +547,9 @@ pytest&gt;=7.4.0 &amp; httpx     <span class="cmt"># Testes de Integração da A
       <div class="grid-2">
         <div class="card">
           <h3>📁 Arquitetura Modular em Camadas</h3>
-          <pre>/manutencao_industrial_preditiva
+          <pre>/manutencao_preditiva
 ├── /data                  <span class="cmt"># 5 CSVs da Azure (caminhos relativos)</span>
-├── /models                <span class="cmt"># model.joblib (9,1 MB) + metrics_report.json</span>
+├── /models                <span class="cmt"># model.joblib (13,1 MB) + metrics_report.json</span>
 ├── /notebooks             <span class="cmt"># 01_eda_and_training.ipynb (EDA e Fases)</span>
 ├── /src
 │   ├── /database          <span class="cmt"># SQLite + ORM SQLAlchemy (models.py)</span>
@@ -557,7 +557,7 @@ pytest&gt;=7.4.0 &amp; httpx     <span class="cmt"># Testes de Integração da A
 │   ├── /services          <span class="cmt"># Pipeline ML + Alertas SMTP (ml_service, email_service)</span>
 │   ├── /routers           <span class="cmt"># APIRouter (/health, /predict, /motors/status, /alerts)</span>
 │   └── main.py            <span class="cmt"># Lifespan (@asynccontextmanager) + UI</span>
-├── /tests                 <span class="cmt"># 9 testes automatizados (test_api.py)</span>
+├── /tests                 <span class="cmt"># 10 testes automatizados (test_api.py)</span>
 ├── requirements.txt       <span class="cmt"># Reprodutibilidade do ambiente</span>
 └── README.md              <span class="cmt"># Documentação com os 6 itens do edital</span></pre>
         </div>
@@ -703,7 +703,7 @@ pytest&gt;=7.4.0 &amp; httpx     <span class="cmt"># Testes de Integração da A
       <div class="grid-2">
         <div class="card">
           <h3>1. Fase 1: Pipeline Scikit-Learn (src/services/ml_service.py)</h3>
-          <pre><span class="kw">def</span> <span class="fn">build_preprocessing_and_model_pipeline</span>(n_estimators=120, max_depth=14):
+          <pre><span class="kw">def</span> <span class="fn">build_preprocessing_and_model_pipeline</span>(n_estimators=150, max_depth=16, min_samples_leaf=2):
     numeric_transformer = Pipeline(steps=[
         (<span class="str">"imputer"</span>, SimpleImputer(strategy=<span class="str">"median"</span>)),
         (<span class="str">"scaler"</span>, StandardScaler())
