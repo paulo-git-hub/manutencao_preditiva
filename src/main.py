@@ -291,7 +291,7 @@ def simulator_ui():
             </div>
             <div class="field">
               <label>Regime de Trabalho (Horas/Dia)</label>
-              <select id="work_shift">
+              <select id="work_shift" onchange="onWorkShiftChange()">
                 <option value="24">24 horas (Contínuo)</option>
                 <option value="16">16 horas (2 turnos)</option>
                 <option value="8">8 horas (1 turno)</option>
@@ -354,6 +354,7 @@ def simulator_ui():
             <span id="statusBadge" class="badge" style="background:rgba(56,189,248,0.15); color:var(--primary);">AGUARDANDO</span>
           </div>
           <div id="rulDisplay" class="rul-number">-- horas</div>
+          <div id="failureDateDisplay" style="font-size:13.5px; color:var(--primary); font-weight:700;">📅 Data/Hora Prevista da Falha: --</div>
           <p id="recDisplay" style="font-size:13.5px; color:var(--muted); line-height:1.5;">
             Clique em "Executar Predição no Modelo" para projetar as datas de falha baseadas no modelo <code>models/model.joblib</code>.
           </p>
@@ -408,12 +409,13 @@ def simulator_ui():
               <th>Telemetria (V / RPM / psi / m/s²)</th>
               <th>Idade / Erros / Manut.</th>
               <th>RUL Gravada</th>
+              <th>Data Prevista da Falha</th>
               <th>Status</th>
               <th>Ação</th>
             </tr>
           </thead>
           <tbody id="sqliteRecordsBody">
-            <tr><td colspan="9" style="color:var(--muted);">Carregando gravações do banco SQLite...</td></tr>
+            <tr><td colspan="10" style="color:var(--muted);">Carregando gravações do banco SQLite...</td></tr>
           </tbody>
         </table>
       </div>
@@ -453,12 +455,13 @@ def simulator_ui():
               <th>Vibração (m/s²)</th>
               <th>Erros 24h</th>
               <th>RUL Estimada</th>
+              <th>Data Prevista da Falha</th>
               <th>Faixa de Status</th>
               <th>Recomendação Técnica</th>
             </tr>
           </thead>
           <tbody id="motorsBandBody">
-            <tr><td colspan="9" style="color:var(--muted);">Carregando motores por faixa de RUL...</td></tr>
+            <tr><td colspan="10" style="color:var(--muted);">Carregando motores por faixa de RUL...</td></tr>
           </tbody>
         </table>
       </div>
@@ -492,6 +495,7 @@ def simulator_ui():
 
   <script>
     let rulChartInstance = null;
+    let lastPredictionData = null;
     let currentBandFilter = '';
     let lastProcessedKeys = new Set();
 
@@ -551,6 +555,44 @@ def simulator_ui():
       return 'var(--success)';
     }
 
+    function formatPredictedFailureDate(baseTimestamp, rulHours) {
+      if (rulHours === undefined || rulHours === null || isNaN(rulHours)) return '-';
+      try {
+        const shiftEl = document.getElementById('work_shift');
+        const shiftHours = shiftEl ? (parseFloat(shiftEl.value) || 24) : 24;
+        const factor = 24 / shiftHours;
+        let baseDate = new Date();
+        if (baseTimestamp) {
+          const normalized = (typeof baseTimestamp === 'string' && !/Z|[+-]\d{2}:?\d{2}$/.test(baseTimestamp))
+            ? `${baseTimestamp}Z`
+            : baseTimestamp;
+          const parsed = new Date(normalized);
+          if (!isNaN(parsed.getTime())) baseDate = parsed;
+        }
+        const failDate = new Date(baseDate.getTime() + (rulHours * factor * 3600000));
+        return failDate.toLocaleString('pt-BR', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+      } catch (_) {
+        return '-';
+      }
+    }
+
+    function onWorkShiftChange() {
+      const shiftH = parseFloat(document.getElementById('work_shift').value) || 24;
+      if (lastPredictionData) {
+        const failStr = formatPredictedFailureDate(null, lastPredictionData.predicted_rul_hours);
+        document.getElementById('failureDateDisplay').textContent = `📅 Data/Hora Prevista da Falha: ${failStr} (Regime ${shiftH}h/dia)`;
+        drawChart(lastPredictionData.predicted_rul_hours, lastPredictionData.status, shiftH);
+      }
+      loadSqliteRecords();
+      loadMotorsByBand();
+    }
+
     function formatLocalTimestamp(ts) {
       if (!ts) return '-';
       try {
@@ -587,7 +629,7 @@ def simulator_ui():
         const tbody = document.getElementById('sqliteRecordsBody');
 
         if (!logs || !logs.length) {
-          tbody.innerHTML = '<tr><td colspan="9" style="color:var(--muted);">Nenhum registro gravado no SQLite para os filtros selecionados.</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="10" style="color:var(--muted);">Nenhum registro gravado no SQLite para os filtros selecionados.</td></tr>';
           return;
         }
 
@@ -608,6 +650,7 @@ def simulator_ui():
             <td>${l.volt.toFixed(1)}V | ${l.rotate.toFixed(0)}RPM | ${l.pressure.toFixed(1)}psi | ${l.vibration.toFixed(1)}m/s²</td>
             <td>${l.age}a | ${l.recent_errors} err | ${l.days_since_maint}d</td>
             <td><strong>${l.predicted_rul_hours.toFixed(2)}h</strong></td>
+            <td style="white-space:nowrap; font-weight:600; color:${statusColor(l.status)};">📅 ${formatPredictedFailureDate(l.timestamp, l.predicted_rul_hours)}</td>
             <td><span style="color:${statusColor(l.status)}; font-weight:800;">${l.status}</span></td>
             <td>
               ${l.idempotency_key
@@ -647,7 +690,7 @@ def simulator_ui():
 
         const tbody = document.getElementById('motorsBandBody');
         if (!data.motors || !data.motors.length) {
-          tbody.innerHTML = '<tr><td colspan="9" style="color:var(--muted);">Nenhum motor encontrado nesta faixa de RUL.</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="10" style="color:var(--muted);">Nenhum motor encontrado nesta faixa de RUL.</td></tr>';
           return;
         }
         tbody.innerHTML = data.motors.map(m => `
@@ -659,6 +702,7 @@ def simulator_ui():
             <td>${m.vibration.toFixed(1)} m/s²</td>
             <td>${m.recent_errors}</td>
             <td><strong>${m.predicted_rul_hours.toFixed(1)}h</strong></td>
+            <td style="white-space:nowrap; font-weight:700; color:${statusColor(m.status)};">📅 ${formatPredictedFailureDate(m.timestamp, m.predicted_rul_hours)}</td>
             <td><span style="color:${statusColor(m.status)}; font-weight:800;">${m.status}</span></td>
             <td style="color:var(--muted);">${m.recommendation || ''}</td>
           </tr>
@@ -817,7 +861,9 @@ def simulator_ui():
         lastProcessedKeys.add(data.idempotency_key);
       }
 
+      lastPredictionData = data;
       document.getElementById('rulDisplay').textContent = `${data.predicted_rul_hours.toFixed(2)} horas`;
+      document.getElementById('failureDateDisplay').textContent = `📅 Data/Hora Prevista da Falha: ${formatPredictedFailureDate(null, data.predicted_rul_hours)} (Regime ${parseFloat(document.getElementById("work_shift").value) || 24}h/dia)`;
       document.getElementById('recDisplay').textContent = data.recommendation;
 
       const badge = document.getElementById('statusBadge');

@@ -245,7 +245,7 @@ def split_train_val_test(
     return X_train, X_val, X_test, y_train, y_val, y_test
 
 
-def build_preprocessing_and_model_pipeline(n_estimators: int = 150, max_depth: int = 16) -> Pipeline:
+def build_preprocessing_and_model_pipeline(n_estimators: int = 150, max_depth: int = 16, min_samples_leaf: int = 2) -> Pipeline:
     """
     Fase 1: Constrói o Pipeline completo do Scikit-Learn contemplando:
     1. Imputação de valores nulos (SimpleImputer)
@@ -275,7 +275,7 @@ def build_preprocessing_and_model_pipeline(n_estimators: int = 150, max_depth: i
         ("regressor", RandomForestRegressor(
             n_estimators=n_estimators,
             max_depth=max_depth,
-            min_samples_leaf=2,
+            min_samples_leaf=min_samples_leaf,
             random_state=42,
             n_jobs=-1
         ))
@@ -284,7 +284,7 @@ def build_preprocessing_and_model_pipeline(n_estimators: int = 150, max_depth: i
     return pipeline
 
 
-def train_model(n_estimators: int = 150, max_depth: int = 16) -> Dict[str, float]:
+def train_model(n_estimators: int = 150, max_depth: int = 16, min_samples_leaf: int = 2) -> Dict[str, float]:
     """
     Fase 1 (Pipeline Offline):
     Executa a divisão Treino/Validação/Teste, ajusta o Pipeline de pré-processamento e modelo,
@@ -316,7 +316,7 @@ def train_model(n_estimators: int = 150, max_depth: int = 16) -> Dict[str, float
 
         pipeline = build_preprocessing_and_model_pipeline(
             n_estimators=n_estimators,
-            max_depth=max_depth
+            max_depth=max_depth, min_samples_leaf=min_samples_leaf
         )
         pipeline.fit(X_train, y_train)
 

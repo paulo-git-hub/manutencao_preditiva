@@ -2,14 +2,20 @@ import uuid
 import pytest
 from fastapi.testclient import TestClient
 from src.main import app
-from src.database.connection import Base, engine
+from src.database.connection import Base, SessionLocal, engine, ensure_schema_columns
+from src.database.models import PredictionLog, EmailAlertLog
 from src.services.ml_service import MODEL_PATH, FEATURES, load_model_on_startup, train_model
 
 
 @pytest.fixture(scope="session", autouse=True)
 def setup_database_and_model():
     """Garante schema atualizado no SQLite e artefato de Pipeline compatível com as features atuais."""
-    Base.metadata.drop_all(bind=engine)
+    Base.metadata.create_all(bind=engine)
+    ensure_schema_columns()
+    with SessionLocal() as db:
+        db.query(EmailAlertLog).filter(EmailAlertLog.machine_id.in_([1, 2, 77])).delete(synchronize_session=False)
+        db.query(PredictionLog).filter(PredictionLog.machine_id.in_([1, 2, 77])).delete(synchronize_session=False)
+        db.commit()
     Base.metadata.create_all(bind=engine)
 
     retrain = not MODEL_PATH.exists()
@@ -141,6 +147,8 @@ def test_simulator_ui_contains_uuid_and_sqlite_viewer(client: TestClient):
     assert "generateUUIDv4" in html
     assert "loadSqliteRecords" in html
     assert "sqliteRecordsBody" in html
+    assert "formatPredictedFailureDate" in html
+    assert "Data Prevista da Falha" in html
 
 
 def test_motors_by_rul_band_and_email_alerts(client: TestClient):
