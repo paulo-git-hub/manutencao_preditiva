@@ -22,7 +22,7 @@ fi
 # 1. Verificar/Criar ambiente virtual (venv)
 if [ ! -f "venv/bin/activate" ] && [ ! -f "venv/Scripts/activate" ]; then
     echo "[1/4] Criando ambiente virtual Python (venv) com $PYTHON_CMD..."
-    $PYTHON_CMD -m venv venv
+    $PYTHON_CMD -m venv --system-site-packages venv
 else
     echo "[1/4] Ambiente virtual (venv) ja encontrado."
 fi
@@ -38,7 +38,20 @@ else
     exit 1
 fi
 
-pip install -r requirements.txt --quiet
+if python -c "import fastapi, uvicorn, sklearn, sqlalchemy, joblib, pytest, httpx" &>/dev/null; then
+    echo "      Todas as dependencias ja estao instaladas e prontas!"
+else
+    echo "      Instalando pacotes do requirements.txt..."
+    if ! pip install -r requirements.txt --quiet; then
+        echo "      [AVISO] Sem conexao com PyPI. Habilitando pacotes globais no venv..."
+        $PYTHON_CMD -m venv --system-site-packages venv
+        if [ -f "venv/bin/activate" ]; then
+            source venv/bin/activate
+        else
+            source venv/Scripts/activate
+        fi
+    fi
+fi
 
 # 3. Verificar artefato do modelo preditivo
 if [ ! -f "models/model.joblib" ]; then
@@ -50,7 +63,7 @@ fi
 
 # 4. Executar suite de testes automatizados
 echo "[4/4] Executando suite de testes automatizados (Pytest)..."
-pytest -v tests/
+python -m pytest -v tests/
 
 echo ""
 echo "============================================================================"

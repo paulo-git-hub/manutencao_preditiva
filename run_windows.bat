@@ -11,7 +11,7 @@ echo.
 :: 1. Verificar/Criar ambiente virtual (venv)
 if not exist "venv\Scripts\activate.bat" (
     echo [1/4] Criando ambiente virtual Python ^(venv^)...
-    python -m venv venv
+    python -m venv --system-site-packages venv
     if errorlevel 1 (
         echo [ERRO] Falha ao criar o ambiente virtual. Verifique se o Python esta instalado e no PATH.
         pause
@@ -21,14 +21,27 @@ if not exist "venv\Scripts\activate.bat" (
     echo [1/4] Ambiente virtual ^(venv^) ja encontrado.
 )
 
-:: 2. Ativar ambiente virtual e instalar dependencias
+:: 2. Ativar ambiente virtual e verificar dependencias
 echo [2/4] Ativando ambiente virtual e verificando dependencias...
 call venv\Scripts\activate.bat
-pip install -r requirements.txt --quiet
+
+python -c "import fastapi, uvicorn, sklearn, sqlalchemy, joblib, pytest, httpx" >nul 2>&1
 if errorlevel 1 (
-    echo [ERRO] Falha ao instalar as dependencias do requirements.txt.
-    pause
-    exit /b 1
+    echo       Instalando pacotes do requirements.txt...
+    pip install -r requirements.txt --quiet
+    if errorlevel 1 (
+        echo       [AVISO] Sem conexao com PyPI. Habilitando pacotes globais no venv...
+        python -m venv --system-site-packages venv
+        call venv\Scripts\activate.bat
+        python -c "import fastapi, uvicorn, sklearn, sqlalchemy, joblib, pytest, httpx" >nul 2>&1
+        if errorlevel 1 (
+            echo [ERRO] Dependencias nao encontradas e sem conexao com a internet ^(pypi.org^).
+            pause
+            exit /b 1
+        )
+    )
+) else (
+    echo       Todas as dependencias ja estao instaladas e prontas!
 )
 
 :: 3. Verificar artefato do modelo preditivo
@@ -41,7 +54,7 @@ if not exist "models\model.joblib" (
 
 :: 4. Executar suite de testes automatizados
 echo [4/4] Executando suite de testes automatizados ^(Pytest^)...
-pytest -v tests/
+python -m pytest -v tests/
 if errorlevel 1 (
     echo [AVISO] Algum teste apresentou falha. Verifique o log acima.
 )
