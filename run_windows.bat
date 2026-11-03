@@ -55,5 +55,8 @@ echo   - Health Check (/health):  http://127.0.0.1:8000/health
 echo ============================================================================
 echo.
 
+:: Abre o navegador automaticamente no Painel Simulador apos o Uvicorn subir
+start "" cmd /c "timeout /t 4 /nobreak >nul & start http://127.0.0.1:8000/simulador"
+
 python -m uvicorn src.main:app --host 127.0.0.1 --port 8000 --reload
 pause
