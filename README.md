@@ -81,7 +81,9 @@ O repositório conta com scripts de inicialização automática ([`run_windows.b
 
 ### 4.1 Passo a Passo Manual: Criação do Ambiente Virtual (`venv`) e Dependências
 
-```bash
+#### 🪟 No Windows
+
+```powershell
 # 1. Clonar o repositório e acessar a pasta raiz
 git clone https://github.com/paulo-git-hub/manutencao_preditiva.git
 cd manutencao_preditiva
@@ -89,14 +91,26 @@ cd manutencao_preditiva
 # 2. Criar o ambiente virtual Python
 python -m venv venv
 
-# 3. Ativar o ambiente virtual (escolha conforme o seu terminal):
-# No Windows (Git Bash / MINGW64):
-source venv/Scripts/activate
-# No Windows (PowerShell):
-.\venv\Scripts\Activate.ps1
-# No Windows (Prompt de Comando / CMD):
-venv\Scripts\activate.bat
-# No Linux / macOS:
+# 3. Ativar o ambiente virtual (escolha o comando do terminal que estiver usando):
+.\venv\Scripts\Activate.ps1      # Se estiver no PowerShell
+venv\Scripts\activate.bat        # Se estiver no Prompt de Comando (CMD)
+source venv/Scripts/activate     # Se estiver no Git Bash (MINGW64)
+
+# 4. Instalar todas as dependências listadas
+pip install -r requirements.txt
+```
+
+#### 🐧 No Linux / macOS
+
+```bash
+# 1. Clonar o repositório e acessar a pasta raiz
+git clone https://github.com/paulo-git-hub/manutencao_preditiva.git
+cd manutencao_preditiva
+
+# 2. Criar o ambiente virtual Python
+python3 -m venv venv
+
+# 3. Ativar o ambiente virtual
 source venv/bin/activate
 
 # 4. Instalar todas as dependências listadas
