@@ -64,7 +64,22 @@ Este projeto resolve esse problema de negócio disponibilizando um **pipeline pr
 
 ## 4. Instruções de Instalação e Execução
 
-### 4.1 Criação do Ambiente Virtual (`venv`) e Instalação das Dependências
+### ⚡ Opção Rápida: Inicialização Automatizada em 1 Comando
+
+O repositório conta com scripts de inicialização automática ([`run_windows.bat`](run_windows.bat) e [`run_linux.sh`](run_linux.sh)) que **criam o `venv`, ativam o ambiente, instalam as dependências, validam o modelo preditivo, executam os 10 testes automatizados (`pytest`) e iniciam o servidor FastAPI** em um único passo:
+
+* **No Windows (PowerShell / CMD):**
+  ```powershell
+  .\run_windows.bat
+  ```
+* **No Linux / macOS ou Git Bash (`MINGW64`) no Windows:**
+  ```bash
+  bash run_linux.sh
+  ```
+
+---
+
+### 4.1 Passo a Passo Manual: Criação do Ambiente Virtual (`venv`) e Dependências
 
 ```bash
 # 1. Clonar o repositório e acessar a pasta raiz
@@ -144,6 +159,9 @@ docker logs -f api-manutencao
 │-- /tests                        # Testes automatizados (test_api.py)
 │-- apresentacao.html             # Slides interativos guiados para o vídeo (Item 5.4)
 │-- producao-gcp-arquitetura.md   # Arquitetura de evolução e escala no Google Cloud Platform (GCP)
+│-- run_windows.bat               # Script de inicialização automatizada para Windows (CMD/PowerShell)
+│-- run_linux.sh                  # Script de inicialização automatizada para Linux/macOS e Git Bash
+│-- pytest.ini                    # Configuração da suíte de testes Pytest
 │-- Dockerfile                    # Empacotamento em container
 │-- .dockerignore                 # Filtro de arquivos ignorados no build da imagem Docker
 │-- requirements.txt              # Dependências com versões
