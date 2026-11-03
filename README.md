@@ -74,9 +74,13 @@ cd manutencao_preditiva
 # 2. Criar o ambiente virtual Python
 python -m venv venv
 
-# 3. Ativar o ambiente virtual
+# 3. Ativar o ambiente virtual (escolha conforme o seu terminal):
+# No Windows (Git Bash / MINGW64):
+source venv/Scripts/activate
 # No Windows (PowerShell):
 .\venv\Scripts\Activate.ps1
+# No Windows (Prompt de Comando / CMD):
+venv\Scripts\activate.bat
 # No Linux / macOS:
 source venv/bin/activate
 
