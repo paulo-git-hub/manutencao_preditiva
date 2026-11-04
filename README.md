@@ -88,15 +88,15 @@ O repositório conta com scripts de inicialização automática ([`run_windows.b
 git clone https://github.com/paulo-git-hub/manutencao_preditiva.git
 cd manutencao_preditiva
 
-# 2. Criar o ambiente virtual Python
-python -m venv venv
+# 2. Criar o ambiente virtual Python (reaproveitando pacotes globais se já instalados)
+python -m venv --system-site-packages venv
 
 # 3. Ativar o ambiente virtual (escolha o comando do terminal que estiver usando):
 .\venv\Scripts\Activate.ps1      # Se estiver no PowerShell
 venv\Scripts\activate.bat        # Se estiver no Prompt de Comando (CMD)
 source venv/Scripts/activate     # Se estiver no Git Bash (MINGW64)
 
-# 4. Instalar todas as dependências listadas
+# 4. Instalar/atualizar todas as dependências listadas
 pip install -r requirements.txt
 ```
 
@@ -107,13 +107,13 @@ pip install -r requirements.txt
 git clone https://github.com/paulo-git-hub/manutencao_preditiva.git
 cd manutencao_preditiva
 
-# 2. Criar o ambiente virtual Python
-python3 -m venv venv
+# 2. Criar o ambiente virtual Python (reaproveitando pacotes globais se já instalados)
+python3 -m venv --system-site-packages venv
 
 # 3. Ativar o ambiente virtual
 source venv/bin/activate
 
-# 4. Instalar todas as dependências listadas
+# 4. Instalar/atualizar todas as dependências listadas
 pip install -r requirements.txt
 ```
 
@@ -134,7 +134,7 @@ python -m uvicorn src.main:app --host 127.0.0.1 --port 8000 --reload
 ### 4.4 Executar a Suíte de Testes Automatizados (Pytest)
 
 ```bash
-pytest -v tests/
+python -m pytest -v tests/
 ```
 
 ### 4.5 (Opcional) Execução via Docker (Containerização)
